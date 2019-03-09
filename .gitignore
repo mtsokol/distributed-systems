@@ -1,2 +1,6 @@
 client
 .idea/
+*.o
+*.a
+*.txt
+cmake-build-debug/

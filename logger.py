@@ -1,6 +1,6 @@
 import socket
 
-serverPort = 9009
+serverPort = 19009
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 serverSocket.bind(('', serverPort))
 buff = []

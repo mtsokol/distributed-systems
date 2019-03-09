@@ -32,9 +32,9 @@ typedef struct token {
     int port;
 } token;
 
-//typedef struct log_response {
-//    char address[100];
-//    int port;
-//} log_response;
+typedef struct log_response {
+    char address[100];
+    int port;
+} log_response;
 
 #endif //SR_SOCKETS_CONTRACT_H
