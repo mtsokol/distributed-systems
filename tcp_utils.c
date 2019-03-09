@@ -65,7 +65,7 @@ void connect_tcp_connection(int socket_out, struct sockaddr_in addr) {
 
     while (connect(socket_out, (const struct sockaddr *) &addr, sizeof(addr)) == -1) {
         printf("waiting to connect\n");
-        usleep(500);
+        usleep(500000);
     }
 
 }

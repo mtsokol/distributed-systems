@@ -29,16 +29,8 @@ void init_udp_socket_server(int *sockfd, int port) {
 void init_udp_socket_client(int *socket_fd) {
 
     if ((*socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+        printf("ERROR: socket udp failed\n");
         exit(1);
     }
 
 }
-
-void send_udp() {
-
-}
-
-void recv_udp() {
-
-}
-

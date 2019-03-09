@@ -13,6 +13,9 @@
 #include <netdb.h>
 #include <sys/types.h>
 #include "tcp_utils.h"
+#include "udp_utils.h"
+
+#define LOGGGER_PORT 19009
 
 token init_token() {
     message m;
@@ -45,6 +48,7 @@ int main(int argc, char **argv) {
     int socket_in;
     int socket_out;
     int access_idx = -1;
+    int logger_fd;
 
     if (argc == 1 || argv[1] == NULL || argv[2] == NULL || argv[3] == NULL || argv[4] == NULL || argv[5] == NULL) {
         printf("Execute args:\n 1. clientID\n 2. port\n 3. neighbour address\n 4. neighbour port\n"
@@ -59,19 +63,15 @@ int main(int argc, char **argv) {
     sscanf(argv[5], "%d", &token_flag);
     sscanf(argv[6], "%d", &protocol);
 
+    //socket to logger
+
+    init_udp_socket_client(&logger_fd);
+
     // initial opening socket
 
     if (token_flag == 1) {
 
         init_tcp_socket_server(&socket_in, port);
-
-//        struct sockaddr_in client;
-//        socklen_t len = sizeof(client);
-//        int socket_cli = accept(socket_in, (struct sockaddr *) &client, &len);
-//        if (socket_cli < 0) {
-//            printf("server acccept failed\n");
-//            exit(1);
-//        }
 
         int socket_cli;
 
@@ -94,10 +94,6 @@ int main(int argc, char **argv) {
         struct sockaddr_in addr;
 
         init_tcp_socket_client(&socket_out, neigh_port, &addr);
-
-//        while (connect(socket_out, (const struct sockaddr *) &addr, sizeof(addr)) == -1) {
-//            printf("inet: can't connect\n");
-//        }
 
         connect_tcp_connection(socket_out, addr);
 
@@ -138,16 +134,6 @@ int main(int argc, char **argv) {
                 exit(1);
             }
 
-//            struct sockaddr_in client;
-//            socklen_t len = sizeof(client);
-//            int cli = accept(socket_in, (struct sockaddr *) &client, &len);
-//            if (cli < 0) {
-//                printf("server acccept failed\n");
-//                exit(1);
-//            } else {
-//                printf("success\n");
-//            }
-
             int socket_cli;
             accept_tcp_connection(socket_in, &socket_cli);
 
@@ -173,9 +159,13 @@ int main(int argc, char **argv) {
 
         } else {
 
-
             //TODO send on multicast
-
+            struct sockaddr_in addr_mul;
+            addr_mul.sin_family = AF_INET;
+            addr_mul.sin_port = htons(LOGGGER_PORT);
+            addr_mul.sin_addr.s_addr = inet_addr("127.0.0.1");
+            sendto(logger_fd, name, strlen(name), MSG_CONFIRM,
+                    (const struct sockaddr*) &addr_mul, sizeof(addr_mul));
 
             printf("1 %d\n", port);
 
@@ -187,11 +177,6 @@ int main(int argc, char **argv) {
             struct sockaddr_in addr;
 
             init_tcp_socket_client(&socket_out, neigh_port, &addr);
-
-//            while (connect(socket_out, (const struct sockaddr *) &addr, sizeof(addr)) == -1) {
-//                printf("waiting to connect\n");
-//                usleep(500);
-//            }
 
             connect_tcp_connection(socket_out, addr);
 
