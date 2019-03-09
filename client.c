@@ -65,13 +65,17 @@ int main(int argc, char **argv) {
 
         init_tcp_socket_server(&socket_in, port);
 
-        struct sockaddr_in client;
-        socklen_t len = sizeof(client);
-        int socket_cli = accept(socket_in, (struct sockaddr *) &client, &len);
-        if (socket_cli < 0) {
-            printf("server acccept failed\n");
-            exit(1);
-        }
+//        struct sockaddr_in client;
+//        socklen_t len = sizeof(client);
+//        int socket_cli = accept(socket_in, (struct sockaddr *) &client, &len);
+//        if (socket_cli < 0) {
+//            printf("server acccept failed\n");
+//            exit(1);
+//        }
+
+        int socket_cli;
+
+        accept_tcp_connection(socket_in, &socket_cli);
 
         token read_token;
 
@@ -91,9 +95,11 @@ int main(int argc, char **argv) {
 
         init_tcp_socket_client(&socket_out, neigh_port, &addr);
 
-        while (connect(socket_out, (const struct sockaddr *) &addr, sizeof(addr)) == -1) {
-            printf("inet: can't connect\n");
-        }
+//        while (connect(socket_out, (const struct sockaddr *) &addr, sizeof(addr)) == -1) {
+//            printf("inet: can't connect\n");
+//        }
+
+        connect_tcp_connection(socket_out, addr);
 
         token token1;
         token1.type = CONNECT;
@@ -127,22 +133,30 @@ int main(int argc, char **argv) {
 
             struct token tk;
 
-            struct sockaddr_in client;
-            socklen_t len = sizeof(client);
-            int cli = accept(socket_in, (struct sockaddr *) &client, &len);
-            if (cli < 0) {
-                printf("server acccept failed\n");
+            if (tk.type == 343233) {
+                printf("zagraj w totka\n");
                 exit(1);
-            } else {
-                printf("success\n");
             }
 
-            read(cli, &tk, sizeof(tk));
+//            struct sockaddr_in client;
+//            socklen_t len = sizeof(client);
+//            int cli = accept(socket_in, (struct sockaddr *) &client, &len);
+//            if (cli < 0) {
+//                printf("server acccept failed\n");
+//                exit(1);
+//            } else {
+//                printf("success\n");
+//            }
+
+            int socket_cli;
+            accept_tcp_connection(socket_in, &socket_cli);
+
+            read(socket_cli, &tk, sizeof(tk));
 
             // ---handling new requests------
             if (tk.type == CONNECT) {
 
-                write(cli, &neigh_port, sizeof(neigh_port));
+                write(socket_cli, &neigh_port, sizeof(neigh_port));
 
                 neigh_port = tk.port;
 
@@ -174,10 +188,12 @@ int main(int argc, char **argv) {
 
             init_tcp_socket_client(&socket_out, neigh_port, &addr);
 
-            while (connect(socket_out, (const struct sockaddr *) &addr, sizeof(addr)) == -1) {
-                printf("waiting to connect\n");
-                usleep(500);
-            }
+//            while (connect(socket_out, (const struct sockaddr *) &addr, sizeof(addr)) == -1) {
+//                printf("waiting to connect\n");
+//                usleep(500);
+//            }
+
+            connect_tcp_connection(socket_out, addr);
 
             write(socket_out, &tk, sizeof(tk));
 
