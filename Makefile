@@ -1,4 +1,4 @@
-.PHONY: all clean run
+.PHONY: all clean run udp
 
 CC=gcc -Wall
 
@@ -33,3 +33,12 @@ run-client-2:
 
 run-client-3:
 	./client CLIENT3 18082 127.0.0.1 18080 0 1
+
+udp-run-client-1:
+	./client CLIENT1 18080 127.0.0.1 -1 1 0
+
+udp-run-client-2:
+	./client CLIENT2 18081 127.0.0.1 18080 0 0
+
+udp-run-client-3:
+	./client CLIENT3 18082 127.0.0.1 18080 0 0

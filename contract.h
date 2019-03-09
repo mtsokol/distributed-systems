@@ -5,8 +5,8 @@
 #ifndef SR_SOCKETS_CONTRACT_H
 #define SR_SOCKETS_CONTRACT_H
 
-#define TCP 0
-#define UDP 1
+#define TCP 1
+#define UDP 0
 
 #define FREE 1
 #define TAKEN 0
