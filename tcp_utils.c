@@ -39,7 +39,7 @@ void init_tcp_socket_client(int *socket_ds, int port, struct sockaddr_in *addr) 
 
     *socket_ds = socket(AF_INET, SOCK_STREAM, 0);
     if (*socket_ds == -1) {
-        printf("inet: can't create socket\n");
+        printf("can't create socket\n");
         exit(1);
     }
 
@@ -55,7 +55,7 @@ void accept_tcp_connection(int socket_in, int *socket_cli) {
     socklen_t len = sizeof(client);
     *socket_cli = accept(socket_in, (struct sockaddr *) &client, &len);
     if (socket_cli < 0) {
-        printf("server acccept failed\n");
+        printf("server accept failed\n");
         exit(1);
     }
 

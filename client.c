@@ -12,28 +12,25 @@
 #include <string.h>
 #include <netdb.h>
 #include <sys/types.h>
+#include <signal.h>
 #include "tcp_utils.h"
 #include "udp_utils.h"
 
 #define LOGGER_PORT 19009
 
-token init_token() {
-    message m;
+//TODO send on multicast [x]
+//TODO exclude socket usage [x]
+//TODO passing message []
+//TODO close sockets on INT [x]
 
-    m.msg[1] = 'a';
+int socket_in;
+int socket_out;
 
-    access_record ac;
-
-    ac.idx = 0;
-
-    token t;
-
-    t.msg = m;
-    t.ac_rec = ac;
-
-    t.type = CONNECT;
-
-    return t;
+void graceful_exit(int signum) {
+    printf("\nexiting\n");
+    close(socket_in);
+    close(socket_out);
+    exit(0);
 }
 
 int main(int argc, char **argv) {
@@ -45,14 +42,15 @@ int main(int argc, char **argv) {
     char neigh_address[100];
     int neigh_port;
     int token_flag;
-    int socket_in;
-    int socket_out;
     int access_idx = -1;
     int logger_fd;
 
-    if (argc == 1 || argv[1] == NULL || argv[2] == NULL || argv[3] == NULL || argv[4] == NULL || argv[5] == NULL) {
-        printf("Execute args:\n 1. clientID\n 2. port\n 3. neighbour address\n 4. neighbour port\n"
-               " 6. have token\n 6. protocol tcp/udp\n");
+    signal(SIGINT, graceful_exit);
+
+    if (argc == 1 || argv[1] == NULL || argv[2] == NULL ||
+        argv[3] == NULL || argv[4] == NULL || argv[5] == NULL) {
+        printf("Execute args:\n 1. clientID\n 2. port\n 3. neighbour address"
+               "\n 4. neighbour port\n 5. have token\n 6. protocol tcp/udp\n");
         exit(1);
     }
 
@@ -142,13 +140,9 @@ int main(int argc, char **argv) {
 
             init_udp_socket_client(&socket_out);
 
-            struct sockaddr_in cli;
-            cli.sin_family = AF_INET;
-            cli.sin_port = htons((uint16_t) neigh_port);
-            cli.sin_addr.s_addr = htonl(INADDR_ANY);
+            struct sockaddr_in cli = init_udp_send(socket_out,
+                    neigh_port, htonl(INADDR_ANY), &token1, MSG_CONFIRM);
             socklen_t len = sizeof(cli);
-            sendto(socket_out, &token1, sizeof(token1), MSG_CONFIRM,
-                   (struct sockaddr *) &cli, len);
 
             recvfrom(socket_out, &response_port, sizeof(response_port), MSG_WAITALL,
                      (struct sockaddr *) &cli, &len);
@@ -162,7 +156,7 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        printf("server established\n");
+        printf("connection established\n");
     }
 
     // network loop
@@ -193,6 +187,9 @@ int main(int argc, char **argv) {
 
                     continue;
                 }
+
+                close(socket_cli);
+
             } else if (protocol == UDP) {
 
                 struct sockaddr_in cli;
@@ -226,16 +223,25 @@ int main(int argc, char **argv) {
 
         } else {
 
-            //TODO send on multicast
-            struct sockaddr_in addr_mul;
-            addr_mul.sin_family = AF_INET;
-            addr_mul.sin_port = htons(LOGGER_PORT);
-            addr_mul.sin_addr.s_addr = inet_addr("127.0.0.1");
-            sendto(logger_fd, name, strlen(name), MSG_DONTWAIT,
-                   (const struct sockaddr *) &addr_mul, sizeof(addr_mul));
-            printf("1 %d\n", port);
+            // MULTICAST
+            init_udp_send(logger_fd, LOGGER_PORT, inet_addr("224.0.0.1"),
+                          name, MSG_DONTWAIT);
 
+            printf("1 %d\n", port);
             token tk;
+
+            //TODO fun with token
+
+            tk.usage = TAKEN;
+            if (access_idx == -1) {
+                tk.ac_rec.idx++;
+                access_idx = tk.ac_rec.idx;
+            }
+
+            //tk.msg.msg = "HELLO";
+
+            //--------------------
+
             tk.type = TOKEN;
             printf("trying to connect to %d\n", neigh_port);
             struct sockaddr_in addr;
@@ -248,36 +254,26 @@ int main(int argc, char **argv) {
 
                 write(socket_out, &tk, sizeof(tk));
 
-                token_flag = 0;
-
-                printf("TOKEN PASSED!\n");
+                close(socket_out);
 
             } else if (protocol == UDP) {
 
                 init_udp_socket_client(&socket_out);
 
-                struct sockaddr_in cli_xd;
-                cli_xd.sin_family = AF_INET;
-                cli_xd.sin_port = htons((uint16_t) neigh_port);
-                cli_xd.sin_addr.s_addr = htonl(INADDR_ANY);
-                socklen_t len = sizeof(cli_xd);
-
-                sendto(socket_out, &tk, sizeof(tk), MSG_CONFIRM,
-                       (const struct sockaddr *) &cli_xd, len);
-
-                token_flag = 0;
-
-                printf("TOKEN PASSED!\n");
+                init_udp_send(socket_out, neigh_port, htonl(INADDR_ANY),
+                              &tk, MSG_CONFIRM);
 
             } else {
                 printf("invalid protocol\n");
                 exit(1);
             }
 
+            token_flag = 0;
+
+            printf("TOKEN PASSED!\n");
         }
 
         sleep(1);
-
     }
 
 }
