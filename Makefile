@@ -42,3 +42,6 @@ udp-run-client-2:
 
 udp-run-client-3:
 	./client CLIENT3 18082 127.0.0.1 18080 0 0
+
+run-logger:
+	python logger.py

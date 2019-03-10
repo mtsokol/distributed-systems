@@ -18,11 +18,6 @@
 
 #define LOGGER_PORT 19009
 
-//TODO send on multicast [x]
-//TODO exclude socket usage [x]
-//TODO passing message []
-//TODO close sockets on INT [x]
-
 int socket_in;
 int socket_out;
 
@@ -44,6 +39,7 @@ int main(int argc, char **argv) {
     int token_flag;
     int access_idx = -1;
     int logger_fd;
+    token ring_token;
 
     signal(SIGINT, graceful_exit);
 
@@ -68,6 +64,12 @@ int main(int argc, char **argv) {
 
     if (token_flag == 1) {
 
+        ring_token.usage = FREE;
+        ring_token.ac_rec.idx = 0;
+        for (int i = 0; i < 100; ++i) {
+            ring_token.ac_rec.arr[i] = 0;
+        }
+
         int socket_cli;
         token read_token;
 
@@ -78,8 +80,6 @@ int main(int argc, char **argv) {
             accept_tcp_connection(socket_in, &socket_cli);
 
             read(socket_cli, &read_token, sizeof(token));
-
-            printf("%d\n", read_token.port);
 
             neigh_port = read_token.port;
 
@@ -94,8 +94,6 @@ int main(int argc, char **argv) {
 
             recvfrom(socket_in, &read_token, sizeof(token), MSG_WAITALL,
                      (struct sockaddr *) &cli, &len);
-
-            printf("%d\n", read_token.port);
 
             neigh_port = read_token.port;
 
@@ -130,8 +128,6 @@ int main(int argc, char **argv) {
 
             read(socket_out, &response_port, sizeof(response_port));
 
-            printf("%d\n", response_port);
-
             neigh_port = response_port;
 
             init_tcp_socket_server(&socket_in, port);
@@ -165,23 +161,19 @@ int main(int argc, char **argv) {
 
         if (token_flag == 0) {
 
-            printf("0 %d\n", port);
-
-            struct token tk;
-
             if (protocol == TCP) {
 
                 int socket_cli;
                 accept_tcp_connection(socket_in, &socket_cli);
 
-                read(socket_cli, &tk, sizeof(tk));
+                read(socket_cli, &ring_token, sizeof(ring_token));
 
                 // ---handling new requests------
-                if (tk.type == CONNECT) {
+                if (ring_token.type == CONNECT) {
 
                     write(socket_cli, &neigh_port, sizeof(neigh_port));
 
-                    neigh_port = tk.port;
+                    neigh_port = ring_token.port;
 
                     sleep(1);
 
@@ -195,15 +187,15 @@ int main(int argc, char **argv) {
                 struct sockaddr_in cli;
                 socklen_t len;
 
-                recvfrom(socket_in, &tk, sizeof(tk), MSG_WAITALL,
+                recvfrom(socket_in, &ring_token, sizeof(ring_token), MSG_WAITALL,
                          (struct sockaddr *) &cli, &len);
 
-                if (tk.type == CONNECT) {
+                if (ring_token.type == CONNECT) {
 
                     sendto(socket_in, &neigh_port, sizeof(neigh_port), MSG_CONFIRM,
                            (struct sockaddr *) &cli, len);
 
-                    neigh_port = tk.port;
+                    neigh_port = ring_token.port;
 
                     sleep(1);
 
@@ -227,22 +219,22 @@ int main(int argc, char **argv) {
             init_udp_send(logger_fd, LOGGER_PORT, inet_addr("224.0.0.1"),
                           name, MSG_DONTWAIT);
 
-            printf("1 %d\n", port);
-            token tk;
-
             //TODO fun with token
+            int r = rand() % 10;
 
-            tk.usage = TAKEN;
+            ring_token.usage = TAKEN;
             if (access_idx == -1) {
-                tk.ac_rec.idx++;
-                access_idx = tk.ac_rec.idx;
+                ring_token.ac_rec.idx++;
+                access_idx = ring_token.ac_rec.idx;
             }
 
-            //tk.msg.msg = "HELLO";
+            int a = ring_token.ac_rec.arr[access_idx]++;
+
+            printf("%d\n", a);
 
             //--------------------
 
-            tk.type = TOKEN;
+            ring_token.type = TOKEN;
             printf("trying to connect to %d\n", neigh_port);
             struct sockaddr_in addr;
 
@@ -252,7 +244,7 @@ int main(int argc, char **argv) {
 
                 connect_tcp_connection(socket_out, addr);
 
-                write(socket_out, &tk, sizeof(tk));
+                write(socket_out, &ring_token, sizeof(ring_token));
 
                 close(socket_out);
 
@@ -261,7 +253,7 @@ int main(int argc, char **argv) {
                 init_udp_socket_client(&socket_out);
 
                 init_udp_send(socket_out, neigh_port, htonl(INADDR_ANY),
-                              &tk, MSG_CONFIRM);
+                              &ring_token, MSG_CONFIRM);
 
             } else {
                 printf("invalid protocol\n");
