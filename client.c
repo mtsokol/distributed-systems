@@ -23,8 +23,8 @@ int socket_out;
 
 void graceful_exit(int signum) {
     printf("\nexiting\n");
-    close(socket_in);
-    close(socket_out);
+    shutdown(socket_in, SHUT_RDWR);
+    shutdown(socket_out, SHUT_RDWR);
     exit(0);
 }
 
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
             init_udp_socket_client(&socket_out);
 
             struct sockaddr_in cli = init_udp_send(socket_out,
-                    neigh_port, htonl(INADDR_ANY), &token1, MSG_CONFIRM);
+                    neigh_port, htonl(INADDR_ANY), &token1, MSG_CONFIRM, sizeof(token));
             socklen_t len = sizeof(cli);
 
             recvfrom(socket_out, &response_port, sizeof(response_port), MSG_WAITALL,
@@ -211,20 +211,52 @@ int main(int argc, char **argv) {
 
             // MULTICAST
             init_udp_send(logger_fd, LOGGER_PORT, inet_addr("224.0.0.1"),
-                          name, MSG_DONTWAIT);
+                          name, MSG_DONTWAIT, sizeof(name));
 
-            //TODO fun with token
-            int r = rand() % 10;
+            if (protocol == TCP) {
+                //MESSAGING MODULE
+                if (access_idx == -1) {
+                    ring_token.ac_rec.idx++;
+                    access_idx = ring_token.ac_rec.idx;
+                    ring_token.ac_rec.arr[access_idx] = 0;
+                }
 
-            ring_token.usage = TAKEN;
-            if (access_idx == -1) {
-                ring_token.ac_rec.idx++;
-                access_idx = ring_token.ac_rec.idx;
+                int seed = rand() % 10;
+
+                if (ring_token.usage == TAKEN) {
+
+                    if (seed < 5) {
+                        ring_token.usage = FREE;
+                        //printf("%s\n", ring_token.msg.msg);
+                    }
+
+                    ring_token.ac_rec.arr[access_idx]++;
+
+                } else {
+
+                    ring_token.ac_rec.arr[access_idx] = 0;
+
+                    //diff
+                    int max = -1, min = 100;
+
+                    for (int i = 0; i < ring_token.ac_rec.idx; ++i) {
+                        if (ring_token.ac_rec.arr[i] > max) {
+                            max = ring_token.ac_rec.arr[i];
+                        }
+                        if (ring_token.ac_rec.arr[i] < min) {
+                            min = ring_token.ac_rec.arr[i];
+                        }
+                    }
+
+                    if (seed < 5 && max - min < 2) {
+                        ring_token.usage = TAKEN;
+                        memcpy(ring_token.msg.msg, name, strlen(name));
+                    }
+
+                }
+
+                printf("%d\n", ring_token.ac_rec.arr[access_idx]);
             }
-
-            int a = ring_token.ac_rec.arr[access_idx]++;
-
-            printf("%d\n", a);
 
             //--------------------
 
@@ -247,7 +279,7 @@ int main(int argc, char **argv) {
                 init_udp_socket_client(&socket_out);
 
                 init_udp_send(socket_out, neigh_port, htonl(INADDR_ANY),
-                              &ring_token, MSG_CONFIRM);
+                              &ring_token, MSG_CONFIRM, sizeof(token));
 
             } else {
                 printf("invalid protocol\n");

@@ -35,13 +35,13 @@ run-client-3:
 	./client CLIENT3 18082 127.0.0.1 18080 0 1
 
 udp-run-client-1:
-	./client CLIENT1 18080 127.0.0.1 -1 1 0
+	./client CLIENT1 8080 127.0.0.1 -1 1 0
 
 udp-run-client-2:
-	./client CLIENT2 18081 127.0.0.1 18080 0 0
+	./client CLIENT2 8081 127.0.0.1 8080 0 0
 
 udp-run-client-3:
-	./client CLIENT3 18082 127.0.0.1 18080 0 0
+	./client CLIENT3 8082 127.0.0.1 8080 0 0
 
 run-logger:
 	python logger.py

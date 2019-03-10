@@ -38,12 +38,12 @@ void init_udp_socket_client(int *socket_fd) {
 
 }
 
-struct sockaddr_in init_udp_send(int socket_fd, int port, in_addr_t addr, void *buff, int flag) {
+struct sockaddr_in init_udp_send(int socket_fd, int port, in_addr_t addr, void *buff, int flag, int size) {
     struct sockaddr_in socket_addr;
     socket_addr.sin_family = AF_INET;
     socket_addr.sin_port = htons((uint16_t) port);
     socket_addr.sin_addr.s_addr = addr;
-    sendto(socket_fd, buff, sizeof(token), flag,
+    sendto(socket_fd, buff, size, flag,
            (const struct sockaddr *) &socket_addr, sizeof(socket_addr));
 
     return socket_addr;
