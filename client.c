@@ -64,12 +64,6 @@ int main(int argc, char **argv) {
 
     if (token_flag == 1) {
 
-        ring_token.usage = FREE;
-        ring_token.ac_rec.idx = 0;
-        for (int i = 0; i < 100; ++i) {
-            ring_token.ac_rec.arr[i] = 0;
-        }
-
         int socket_cli;
         token read_token;
 
