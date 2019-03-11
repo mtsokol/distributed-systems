@@ -26,15 +26,10 @@ typedef struct access_record {
 typedef struct token {
     int type; // 10 - connect, 11 - token
     int usage; // 0 - free, 1 - taken
-    char recipient_name[100]; // client ID
+    //char recipient_name[100]; // client ID
     message msg;
     access_record ac_rec;
     int port;
 } token;
-
-typedef struct log_response {
-    char address[100];
-    int port;
-} log_response;
 
 #endif //SR_SOCKETS_CONTRACT_H

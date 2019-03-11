@@ -32,12 +32,10 @@ int main(int argc, char **argv) {
 
     char name[100];
     int protocol;
-    //char address[100];
     int port;
     char neigh_address[100];
     int neigh_port;
-    int token_flag;
-    int access_idx = -1;
+    int token_flag;;
     int logger_fd;
     token ring_token;
 
@@ -203,7 +201,7 @@ int main(int argc, char **argv) {
             //----------------------------------
 
             token_flag = 1;
-            printf("MINE TIME!\n");
+            printf("MY TIME!\n");
 
             sleep(1);
 
@@ -212,53 +210,6 @@ int main(int argc, char **argv) {
             // MULTICAST
             init_udp_send(logger_fd, LOGGER_PORT, inet_addr("224.0.0.1"),
                           name, MSG_DONTWAIT, sizeof(name));
-
-            if (protocol == TCP) {
-                //MESSAGING MODULE
-                if (access_idx == -1) {
-                    ring_token.ac_rec.idx++;
-                    access_idx = ring_token.ac_rec.idx;
-                    ring_token.ac_rec.arr[access_idx] = 0;
-                }
-
-                int seed = rand() % 10;
-
-                if (ring_token.usage == TAKEN) {
-
-                    if (seed < 5) {
-                        ring_token.usage = FREE;
-                        //printf("%s\n", ring_token.msg.msg);
-                    }
-
-                    ring_token.ac_rec.arr[access_idx]++;
-
-                } else {
-
-                    ring_token.ac_rec.arr[access_idx] = 0;
-
-                    //diff
-                    int max = -1, min = 100;
-
-                    for (int i = 0; i < ring_token.ac_rec.idx; ++i) {
-                        if (ring_token.ac_rec.arr[i] > max) {
-                            max = ring_token.ac_rec.arr[i];
-                        }
-                        if (ring_token.ac_rec.arr[i] < min) {
-                            min = ring_token.ac_rec.arr[i];
-                        }
-                    }
-
-                    if (seed < 5 && max - min < 2) {
-                        ring_token.usage = TAKEN;
-                        memcpy(ring_token.msg.msg, name, strlen(name));
-                    }
-
-                }
-
-                printf("%d\n", ring_token.ac_rec.arr[access_idx]);
-            }
-
-            //--------------------
 
             ring_token.type = TOKEN;
             printf("trying to connect to %d\n", neigh_port);

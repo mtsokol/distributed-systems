@@ -1,5 +1,4 @@
 import socket
-import struct
 import datetime
 import time
 
@@ -10,9 +9,6 @@ serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 serverSocket.bind((UDP_IP, serverPort))
 buff = []
-
-#mreq = struct.pack("4sl", socket.inet_aton(UDP_IP), socket.INADDR_ANY)
-#serverSocket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 print('PYTHON LOGGER IS RUNNING')
 
