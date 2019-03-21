@@ -1,0 +1,16 @@
+syntax = "proto2";
+option java_package = "protos";
+option java_outer_classname = "DistributedMapProtos";
+
+message MapOperation {
+    required OperationType type = 1;
+    required string key = 2;
+    optional int32 value = 3;
+
+    enum OperationType {
+        GET = 0;
+        CONTAINS = 1;
+        PUT = 2;
+        REMOVE = 3;
+    }
+}

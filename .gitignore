@@ -4,3 +4,7 @@ client
 *.a
 *.txt
 cmake-build-debug/
+
+.gradle
+out/
+gradle/

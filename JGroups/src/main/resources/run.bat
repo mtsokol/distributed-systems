@@ -1,0 +1,1 @@
+protoc distributedmap.proto --java_out=../java
