@@ -15,47 +15,12 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
 
     private final Map<String, Integer> hashMap = new HashMap<>();
 
-    private JChannel channel = new JChannel();
+    private JChannel channel = new JChannel("udp.xml");
 
     DistributedMap() throws Exception {
-
-//        ProtocolStack stack = new ProtocolStack();
-//
-//        stack.setChannel(channel);
-//
-//        stack.addProtocol(new UDP().setValue("mcast_group_addr",
-//                InetAddress.getByName("230.100.200.10")))
-//                .addProtocol(new PING())
-//                .addProtocol(new MERGE3())
-//                .addProtocol(new FD_SOCK())
-//                .addProtocol(new FD_ALL().setValue("timeout", 12000)
-//                        .setValue("interval", 3000))
-//                .addProtocol(new VERIFY_SUSPECT())
-//                .addProtocol(new BARRIER())
-//                .addProtocol(new NAKACK2())
-//                .addProtocol(new UNICAST3())
-//                .addProtocol(new STABLE())
-//                .addProtocol(new GMS())
-//                .addProtocol(new UFC())
-//                .addProtocol(new MFC())
-//                .addProtocol(new FRAG2())
-//        .addProtocol(new RSVP().setValue("resend_interval", 2000)
-//        .setValue("timeout", 10000))
-//        .addProtocol(new STATE_TRANSFER());
-//        stack.init();
-//
-//        System.out.println(stack.getProtocols().get(5));
-//        stack.getProtocols().get(5).start();
-//
-//        channel = new JChannel(stack);
-
         channel.setReceiver(this);
         channel.setDiscardOwnMessages(true);
-
-        System.out.println(channel.getProtocolStack().getProtocols());
-
         channel.connect("MapGroup");
-
         channel.getState(null, 10000);
     }
 
@@ -175,7 +140,8 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
                 try {
                     ch.getState(null, 30000);
                 }
-                catch(Exception ex) {
+                catch(Exception e) {
+                    e.printStackTrace();
                 }
             }
             else {
