@@ -4,15 +4,19 @@ public class Main {
 
         DistributedMap distributedMap = new DistributedMap();
 
-        distributedMap.put("CAR1", 43);
+        while (true) {
+            Thread.sleep(1000);
 
-        distributedMap.put("HOME2", 23);
+            distributedMap.put("CAR1", (int) (Math.random() * 100));
 
-        Thread.sleep(1000);
+            distributedMap.put("HOME2", 23);
 
-        int result = distributedMap.get("CAR1");
+            int result = distributedMap.get("CAR1");
 
-        System.out.println(result);
+            System.out.println(result);
+
+        }
+
     }
 
 }
