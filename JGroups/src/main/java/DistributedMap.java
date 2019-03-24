@@ -15,7 +15,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
 
     private final Map<String, Integer> hashMap = new HashMap<>();
 
-    private JChannel channel = new JChannel("udp.xml");
+    private JChannel channel = new JChannel("src/main/resources/udp_stack.xml");
 
     DistributedMap() throws Exception {
         channel.setReceiver(this);
@@ -25,13 +25,13 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     }
 
     @Override
-    public void viewAccepted(View new_view) {
-        if (new_view instanceof MergeView) {
-            MergeView tmp = (MergeView) new_view;
+    public void viewAccepted(View view) {
+        if (view instanceof MergeView) {
+            MergeView tmp = (MergeView) view;
             ViewHandler handler = new ViewHandler(channel, tmp);
             handler.start();
         }
-        System.out.println("** view: " + new_view);
+        System.out.println("view: " + view);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
         try {
             MapOperation operation = MapOperation.parseFrom(msg.getBuffer());
 
-            System.out.println(operation.getKey());
+            System.out.println(operation.getType() + " " + operation.getKey());
 
             switch (operation.getType()) {
                 case PUT:
@@ -126,25 +126,23 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
         MergeView view;
 
         private ViewHandler(JChannel ch, MergeView view) {
-            this.ch=ch;
-            this.view=view;
+            this.ch = ch;
+            this.view = view;
         }
 
         public void run() {
-            List<View> subgroups=view.getSubgroups();
-            View tmp_view=subgroups.get(0); // picks the first
-            Address local_addr=ch.getAddress();
-            if(!tmp_view.getMembers().contains(local_addr)) {
+            List<View> subgroups = view.getSubgroups();
+            View tmp_view = subgroups.get(0); // picks the first
+            Address local_addr = ch.getAddress();
+            if (!tmp_view.getMembers().contains(local_addr)) {
                 System.out.println("Not member of the new primary partition ("
                         + tmp_view + "), will re-acquire the state");
                 try {
                     ch.getState(null, 30000);
-                }
-                catch(Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-            else {
+            } else {
                 System.out.println("Not member of the new primary partition ("
                         + tmp_view + "), will do nothing");
             }

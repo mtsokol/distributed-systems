@@ -1,1 +1,1 @@
-protoc distributedmap.proto --java_out=../java
+protoc distributedmap.proto --java_out=../java/protos

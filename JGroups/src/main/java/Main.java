@@ -7,13 +7,17 @@ public class Main {
         while (true) {
             Thread.sleep(1000);
 
-            distributedMap.put("CAR1", (int) (Math.random() * 100));
+            String randLabel = "Entry" + (int) (Math.random() * 100);
 
-            distributedMap.put("HOME2", 23);
+            distributedMap.put(randLabel, (int) (Math.random() * 100));
 
-            int result = distributedMap.get("CAR1");
+            int result = distributedMap.get(randLabel);
 
             System.out.println(result);
+
+            if ((int) (Math.random() * 100) % 3 == 0) {
+                distributedMap.remove(randLabel);
+            }
 
         }
 
