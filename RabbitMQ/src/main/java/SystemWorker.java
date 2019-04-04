@@ -23,31 +23,24 @@ abstract class SystemWorker {
     }
 
     void registerCallback() throws Exception {
-        Consumer consumer = new DefaultConsumer(channel) {
-            @Override
-            public void handleDelivery(String consumerTag, Envelope envelope,
-                                       AMQP.BasicProperties properties, byte[] body) {
-                String message = new String(body);
-
-                System.out.println("Received: " + message);
-            }
-        };
-
-        channel.basicConsume(callbackQueue, AUTO_ACK, consumer);
+        registerConsumer(callbackQueue, "Received: ");
     }
 
     void registerLogger() throws Exception {
+        registerConsumer(loggerQueue, "ADMIN MESSAGE: ");
+    }
+
+    private void registerConsumer(String queue, String messageHeader) throws Exception {
         Consumer consumer = new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope,
                                        AMQP.BasicProperties properties, byte[] body) {
                 String message = new String(body);
 
-                System.out.println("ADMIN MESSAGE: " + message);
+                System.out.println(messageHeader + message);
             }
         };
-
-        channel.basicConsume(loggerQueue, AUTO_ACK, consumer);
+        channel.basicConsume(queue, AUTO_ACK, consumer);
     }
 
 }
