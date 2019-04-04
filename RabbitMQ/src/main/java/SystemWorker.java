@@ -3,8 +3,10 @@ import com.rabbitmq.client.*;
 abstract class SystemWorker {
 
     Channel channel;
-    String clinicExchange;
+    final String clinicExchange = "injury_exchange";
+    final String loggerExchange = "logger_exchange";
     String callbackQueue;
+    String loggerQueue;
     static final boolean AUTO_ACK = true;
 
     SystemWorker() throws Exception {
@@ -13,9 +15,11 @@ abstract class SystemWorker {
         Connection connection = factory.newConnection();
         channel = connection.createChannel();
 
-        clinicExchange = "clinic_exchange";
         channel.exchangeDeclare(clinicExchange, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(loggerExchange, BuiltinExchangeType.FANOUT);
         callbackQueue = channel.queueDeclare().getQueue();
+        loggerQueue = channel.queueDeclare().getQueue();
+        channel.queueBind(loggerQueue, loggerExchange, "");
     }
 
     void registerCallback() throws Exception {
@@ -30,6 +34,20 @@ abstract class SystemWorker {
         };
 
         channel.basicConsume(callbackQueue, AUTO_ACK, consumer);
+    }
+
+    void registerLogger() throws Exception {
+        Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties, byte[] body) {
+                String message = new String(body);
+
+                System.out.println("ADMIN MESSAGE: " + message);
+            }
+        };
+
+        channel.basicConsume(loggerQueue, AUTO_ACK, consumer);
     }
 
 }
