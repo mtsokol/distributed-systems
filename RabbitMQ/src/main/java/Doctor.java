@@ -2,8 +2,15 @@ import com.rabbitmq.client.AMQP;
 
 public class Doctor extends SystemWorker {
 
+    private AMQP.BasicProperties props;
+
     private Doctor() throws Exception {
         super();
+
+        props = new AMQP.BasicProperties
+                .Builder()
+                .replyTo(callbackQueue)
+                .build();
     }
 
     public static void main(String[] args) throws Exception {
@@ -12,30 +19,23 @@ public class Doctor extends SystemWorker {
         doctor.registerCallback();
         doctor.registerLogger();
 
-        AMQP.BasicProperties props = new AMQP.BasicProperties
-                .Builder()
-                .replyTo(doctor.callbackQueue)
-                .build();
-
         while (true) {
 
             Thread.sleep(3000);
 
-            System.out.println("Sending requests");
-            doctor.channel.basicPublish(doctor.clinicExchange, "hip",
-                    props, "maria, hip".getBytes());
-
-            doctor.channel.basicPublish(doctor.clinicExchange, "knee",
-                    props, "maria, knee".getBytes());
-
-            doctor.channel.basicPublish(doctor.clinicExchange, "elbow",
-                    props, "maria, elbow".getBytes());
-
-            doctor.channel.basicPublish(doctor.clinicExchange, "admin",
-                    null, "copy".getBytes());
-
+            doctor.injuryPublish("hip", "maria, hip");
+            doctor.injuryPublish("knee", "maria, knee");
+            doctor.injuryPublish("elbow", "maria, elbow");
         }
 
+    }
+
+    private void injuryPublish(String key, String message) throws Exception {
+        System.out.println("Sending requests");
+        channel.basicPublish(clinicExchange, key,
+                props, message.getBytes());
+        channel.basicPublish(clinicExchange, "admin",
+                null, (message + " " + hashCode()).getBytes());
     }
 
 }

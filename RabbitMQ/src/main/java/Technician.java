@@ -12,15 +12,16 @@ public class Technician extends SystemWorker {
 
         Technician tech = new Technician();
 
+        String firstSpec = args[0];
+        String secondSpec = args[1];
+
         tech.registerLogger();
 
-        String hipQueue = tech.channel.queueDeclare().getQueue();
-        String kneeQueue = tech.channel.queueDeclare().getQueue();
-        //String elbowQueue = tech.channel.queueDeclare().getQueue();
+        String firstQueue = tech.channel.queueDeclare().getQueue();
+        String secondQueue = tech.channel.queueDeclare().getQueue();
 
-        tech.channel.queueBind(hipQueue, tech.clinicExchange, "hip");
-        tech.channel.queueBind(kneeQueue, tech.clinicExchange, "knee");
-        //tech.channel.queueBind(elbowQueue, tech.clinicExchange, "elbow");
+        tech.channel.queueBind(firstQueue, tech.clinicExchange, firstSpec);
+        tech.channel.queueBind(secondQueue, tech.clinicExchange, secondSpec);
 
         Consumer consumer = new DefaultConsumer(tech.channel) {
             @Override
@@ -43,9 +44,8 @@ public class Technician extends SystemWorker {
             }
         };
 
-        tech.channel.basicConsume(hipQueue, AUTO_ACK, consumer);
-        tech.channel.basicConsume(kneeQueue, AUTO_ACK, consumer);
-        //tech.channel.basicConsume(elbowQueue, AUTO_ACK, consumer);
+        tech.channel.basicConsume(firstQueue, AUTO_ACK, consumer);
+        tech.channel.basicConsume(secondQueue, AUTO_ACK, consumer);
     }
 
 }
