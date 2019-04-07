@@ -6,6 +6,7 @@ public class Technician extends SystemWorker {
 
     private Technician() throws Exception{
         super();
+        channel.basicQos(1);
     }
 
     public static void main(String[] args) throws Exception {
@@ -35,10 +36,11 @@ public class Technician extends SystemWorker {
                     e.printStackTrace();
                 }
 
-                tech.channel.basicPublish("", properties.getReplyTo(), null, (message + " done").getBytes());
+                tech.channel.basicPublish("", properties.getReplyTo(),
+                        null, (message + " done").getBytes());
 
                 tech.channel.basicPublish(tech.clinicExchange, "admin",
-                        null, "copy done".getBytes());
+                        null, (message + " done").getBytes());
 
                 System.out.println("Received: " + message + " from " + properties.getReplyTo());
             }
