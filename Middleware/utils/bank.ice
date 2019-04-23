@@ -7,16 +7,27 @@ module BankSystem {
   struct Password { string value; };
   struct Pesel { long value; };
   struct Balance { double value; };
+  struct Name { string value; };
+  struct Surname { string value; };
+  struct Period { string value; };
 
   struct AccountCreated { Password password; AccountType accountType; };
   struct Credentials { Pesel pesel; Password password; };
   
-  struct CreditEstimate { double originCurrency; double foreignCurrency; };
+  struct CreditEstimate { Balance originCurrency; Balance foreignCurrency; };
+
+  exception InvalidCredentialsException {
+    string reason = "pesel of password invalid";
+  };
+
+  exception InvalidAccountTypeException {
+    string reason = "credits are only for premium users";
+  };
 
   interface Bank {
-    AccountCreated createAccount(string name, string surname, Pesel pesel, long income);
-    Balance accountBalance(Credentials credentials);
-    CreditEstimate applyForCredit(Credentials credentials, Currency currency, long amount, string period);
+    AccountCreated createAccount(Name name, Surname surname, Pesel pesel, Balance income);
+    Balance accountBalance(Credentials credentials) throws InvalidCredentialsException;
+    CreditEstimate applyForCredit(Credentials credentials, Currency currency, Balance amount, Period period) throws InvalidAccountTypeException;
   };
 
 };
