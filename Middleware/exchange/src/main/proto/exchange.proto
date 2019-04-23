@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_package = "protos";
+option java_outer_classname = "ExchangeProto";
+
+service Exchange {
+  rpc subscribeExchangeRate (ExchangeRequest) returns (stream ExchangeStream) {}
+}
+
+enum Currency {
+  PLN = 0;
+  GBP = 1;
+  USD = 2;
+  CHF = 3;
+  EUR = 4;
+}
+
+message ExchangeRequest {
+  Currency origin_currency = 1;
+  repeated Currency currency_rates = 2 [packed=true];
+}
+
+message ExchangeStream {
+  Currency currency = 1;
+  double ExchangeRate = 2;
+}
+
