@@ -11,7 +11,7 @@ public class Main {
     Server server;
 
     private void start() throws IOException {
-        int port = 5000;
+        int port = 50051;
         server = ServerBuilder.forPort(port)
                 .addService(new Service())
                 .build()
@@ -19,8 +19,17 @@ public class Main {
        // Runtime.getRuntime()
     }
 
+    private void blockUntilShutdown() throws InterruptedException {
+        if (server != null) {
+            server.awaitTermination();
+        }
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
 
+        final Main main = new Main();
+        main.start();
+        main.blockUntilShutdown();
     }
 
     private static class Service extends ExchangeGrpc.ExchangeImplBase {
@@ -31,7 +40,11 @@ public class Main {
 
             request.getCurrencyRatesList();
 
-            while (true) {
+            int i = 0;
+
+            while (i < 5) {
+
+                i++;
 
                 ExchangeProto.ExchangeStream x = ExchangeProto.ExchangeStream.newBuilder()
                         .setCurrency(ExchangeProto.Currency.CHF).setExchangeRate(23.3).build();
@@ -41,7 +54,7 @@ public class Main {
             }
 
 
-            //responseObserver.onCompleted();
+            responseObserver.onCompleted();
         }
     }
 }
