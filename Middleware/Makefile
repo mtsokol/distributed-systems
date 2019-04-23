@@ -1,14 +1,16 @@
 .PHONY: bank_ice run_server run_client
 
 bank_ice:
-	slice2py --output-dir ./utils/out ./utils/bank.ice
+	mkdir -p ./utils/out/ice; \
+	slice2py --output-dir ./utils/out/ice ./utils/bank.ice
 
 proto_exchange_java:
 	cd exchange; \
 	./gradlew build
 
 proto_exchange_python:
-	python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. exchange.proto
+	mkdir -p ./utils/out/proto; \
+	python3 -m grpc_tools.protoc -I./utils --python_out=./utils/out/proto --grpc_python_out=./utils/out/proto exchange.proto
 
 run_server:
 	python3 ./bank/server.py

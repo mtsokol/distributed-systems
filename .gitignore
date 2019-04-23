@@ -1,4 +1,5 @@
 client
+!Middleware/client
 .idea/
 *.o
 *.a

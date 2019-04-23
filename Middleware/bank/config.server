@@ -4,7 +4,7 @@
 # "Hello". The following line sets the endpoints for this
 # adapter.
 #
-Bank.Endpoints=tcp -p 10000:udp -p 10001:ws -p 10003
+AccountFactory.Endpoints=tcp -p 10000:udp -p 10001:ws -p 10003
 
 #
 # Only listen on the localhost interface by default.
