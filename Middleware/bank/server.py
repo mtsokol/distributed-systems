@@ -47,7 +47,7 @@ class AccountI(Account):
 
     def applyForCredit(self, currency, amount, period, current):
         if self.accountType == AccountType.STANDARD:
-            raise Exception('blalba')
+            raise InvalidAccountTypeExceptionI('nuh')
         return CreditEstimate(Balance(1000), Balance(100))
 
 
@@ -56,14 +56,19 @@ class AccountFactoryI(AccountFactory):
         accType = AccountType.STANDARD
         if income.value > 1000:
             accType = AccountType.PREMIUM
-        password = Password("wed3rgeo")
+        password = Password("wed3")
         account = AccountI(accType, name, surname, pesel, password, income)
         current.adapter.add(account, Ice.stringToIdentity(str(pesel.value)))
         return AccountCreated(Password("wed3rgeo"), accType)
 
     def obtainAccess(self, credentials, current):
         # TODO validation bla bla...
-        return AccountPrx.checkedCast(current.adapter.createProxy(Ice.stringToIdentity(str(credentials.pesel.value))))
+        try:
+            obj = AccountPrx.checkedCast(current.adapter.createProxy(Ice.stringToIdentity(str(credentials.pesel.value))))
+        except Exception:
+            raise InvalidCredentialsExceptionI
+        else:
+            return obj
 
 
 with Ice.initialize(sys.argv, "./bank/config.server") as communicator:
