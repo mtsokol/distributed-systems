@@ -5,6 +5,7 @@ import protos.ExchangeGrpc;
 import protos.ExchangeProto;
 
 import java.io.IOException;
+import java.util.Random;
 
 public class Main {
 
@@ -36,25 +37,29 @@ public class Main {
         @Override
         public void subscribeExchangeRate(ExchangeProto.ExchangeRequest request, StreamObserver<ExchangeProto.ExchangeStream> responseObserver) {
 
-            ExchangeProto.Currency xd = request.getOriginCurrency();
+            Random generator = new Random();
+            ExchangeProto.Currency originCurrency = request.getOriginCurrency();
 
-            request.getCurrencyRatesList();
+            while (true) {
 
-            int i = 0;
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-            while (i < 5) {
+                for (ExchangeProto.Currency c : request.getCurrencyRatesList()) {
 
-                i++;
+                    int i = generator.nextInt(20) + 1;
 
-                ExchangeProto.ExchangeStream x = ExchangeProto.ExchangeStream.newBuilder()
-                        .setCurrency(ExchangeProto.Currency.CHF).setExchangeRate(23.3).build();
+                    ExchangeProto.ExchangeStream rate = ExchangeProto.ExchangeStream.newBuilder()
+                            .setCurrency(c).setExchangeRate(i).build();
 
-                responseObserver.onNext(x);
-
+                    responseObserver.onNext(rate);
+                }
             }
 
-
-            responseObserver.onCompleted();
+            //responseObserver.onCompleted();
         }
     }
 }

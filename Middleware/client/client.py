@@ -6,6 +6,16 @@ sys.path.append(os.path.abspath("./utils/out/ice"))
 
 from BankSystem import *
 
+def get_currency_symbol(str):
+    switch = {
+        'PLN': Currency.PLN,
+        'GBP': Currency.GBP ,
+        'USD': Currency.USD,
+        'CHF': Currency.CHF,
+        'EUR': Currency.EUR
+    }
+    return switch.get(str.upper(), 'invalid currency')
+
 def cli_wr_rd(msg):
     sys.stdout.write(msg)
     sys.stdout.flush()
@@ -57,8 +67,17 @@ def run(communicator):
             elif command == 'balance':
                 print(f'your balance is: {account_proxy.getAccountBalance()}')
             elif command == 'credit':
-                credit_estimate = account_proxy.applyForCredit(Currency.PLN, Balance(1000), Period('6 months'))
-                print(credit_estimate)
+                credit_currency = cli_wr_rd('credit-currency$ ')
+                credit_amount = cli_wr_rd('credit-amount$ ')
+                credit_period = cli_wr_rd('credit-period$ ')
+                try:
+                    credit_estimate = account_proxy.applyForCredit(get_currency_symbol(credit_currency),
+                                                                   Balance(int(credit_amount)),
+                                                                   Period(credit_period))
+                except InvalidAccountTypeException as error:
+                    print(error)
+                else:
+                    print(credit_estimate)
             elif command == 'accounttype':
                 print(f'your account type is: {account_proxy.getAccountType()}')
             else:
