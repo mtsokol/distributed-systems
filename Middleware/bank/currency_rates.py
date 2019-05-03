@@ -8,8 +8,8 @@ import exchange_pb2_grpc
 
 currency_rates = {
     PLN: 1,
-    GBP: 3,
-    USD: 2,
-    CHF: 5,
-    EUR: 4
+    GBP: 1,
+    USD: 1,
+    CHF: 1,
+    EUR: 1
 }

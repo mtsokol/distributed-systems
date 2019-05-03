@@ -23,7 +23,7 @@ def run_exchange_conn(arg):
     channel = grpc.insecure_channel('localhost:50051')
     stub = exchange_pb2_grpc.ExchangeStub(channel)
 
-    request = exchange_pb2.ExchangeRequest(origin_currency=exchange_pb2.PLN, currency_rates=[arg])
+    request = exchange_pb2.ExchangeRequest(origin_currency=exchange_pb2.PLN, currency_rates=arg)
 
     for response in stub.subscribeExchangeRate(request):
         print(currency_rates)
@@ -49,6 +49,7 @@ class AccountI(Account):
         self.balance = Balance(income.value + 100)
 
     def getAccountType(self, current):
+        print('got account type')
         return self.accountType
 
     def getAccountBalance(self, current):
@@ -97,7 +98,9 @@ class AccountFactoryI(AccountFactory):
 
 with Ice.initialize(sys.argv, "./bank/config.server") as communicator:
     if __name__ == "__main__":
-        exchange_thread = Thread(target=run_exchange_conn, args=(exchange_pb2.USD, ))
+        currencies = list(map(lambda e: int(e), sys.argv[1:]))
+
+        exchange_thread = Thread(target=run_exchange_conn, args=(currencies, ))
         exchange_thread.start()
 
     signal.signal(signal.SIGINT, lambda signum, frame: communicator.shutdown())

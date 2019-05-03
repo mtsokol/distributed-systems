@@ -41,11 +41,15 @@ def run(communicator):
                 surname = cli_wr_rd('your-surname$ ')
                 pesel = cli_wr_rd('your-pesel$ ')
                 balance = cli_wr_rd('your-balance$ ')
-                acc_create_resp = server.createAccount(Name(name),
-                                                       Surname(surname),
-                                                       Pesel(int(pesel)),
-                                                       Balance(int(balance)))
-                print(acc_create_resp)
+                try:
+                    acc_create_resp = server.createAccount(Name(name),
+                                                           Surname(surname),
+                                                           Pesel(int(pesel)),
+                                                           Balance(int(balance)))
+                except Exception as error:
+                    print(error)
+                else:
+                    print(acc_create_resp)
             elif command == 'signin':
                 pesel = cli_wr_rd('your-pesel$ ')
                 password = cli_wr_rd('your-password$ ')

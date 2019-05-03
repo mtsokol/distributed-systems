@@ -5,11 +5,14 @@ import protos.ExchangeGrpc;
 import protos.ExchangeProto;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Random;
 
 public class Main {
 
-    Server server;
+    private Server server;
+
+    //synchronized
 
     private void start() throws IOException {
         int port = 50051;
@@ -17,7 +20,6 @@ public class Main {
                 .addService(new Service())
                 .build()
                 .start();
-       // Runtime.getRuntime()
     }
 
     private void blockUntilShutdown() throws InterruptedException {
@@ -35,25 +37,28 @@ public class Main {
 
     private static class Service extends ExchangeGrpc.ExchangeImplBase {
         @Override
-        public void subscribeExchangeRate(ExchangeProto.ExchangeRequest request, StreamObserver<ExchangeProto.ExchangeStream> responseObserver) {
+        public void subscribeExchangeRate(ExchangeProto.ExchangeRequest request,
+                                          StreamObserver<ExchangeProto.ExchangeStream> responseObserver) {
 
             Random generator = new Random();
             ExchangeProto.Currency originCurrency = request.getOriginCurrency();
 
+            List<protos.ExchangeProto.Currency> ratesList = request.getCurrencyRatesList();
+            ratesList.remove(originCurrency);
+
             while (true) {
 
                 try {
-                    Thread.sleep(1000);
+                    int sleepTime = generator.nextInt(500) + 500;
+                    Thread.sleep(sleepTime);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                for (ExchangeProto.Currency c : request.getCurrencyRatesList()) {
-
-                    int i = generator.nextInt(20) + 1;
-
+                for (ExchangeProto.Currency currency : ratesList) {
+                    int value = generator.nextInt(20) + 1;
                     ExchangeProto.ExchangeStream rate = ExchangeProto.ExchangeStream.newBuilder()
-                            .setCurrency(c).setExchangeRate(i).build();
+                            .setCurrency(currency).setExchangeRate(value).build();
 
                     responseObserver.onNext(rate);
                 }

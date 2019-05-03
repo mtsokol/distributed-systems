@@ -13,7 +13,7 @@ proto_exchange_python:
 	python3 -m grpc_tools.protoc -I./utils --python_out=./utils/out/proto --grpc_python_out=./utils/out/proto exchange.proto
 
 run_server:
-	python3 ./bank/server.py
+	python3 ./bank/server.py 1 2 3
 
 run_client:
 	python3 ./client/client.py
