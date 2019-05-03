@@ -22,6 +22,7 @@ def cli_wr_rd(msg):
     return sys.stdin.readline().strip()
 
 def run(communicator):
+
     server = AccountFactoryPrx.checkedCast(
         communicator.propertyToProxy('AccountFactory.Proxy').ice_twoway().ice_secure(False))
     if not server:
@@ -48,9 +49,10 @@ def run(communicator):
             elif command == 'signin':
                 pesel = cli_wr_rd('your-pesel$ ')
                 password = cli_wr_rd('your-password$ ')
+                ctx = {'password': password}
                 try:
-                    account_proxy = server.obtainAccess(Credentials(Pesel(int(pesel)), Password(password)))
-                except InvalidCredentialsException as error:
+                    account_proxy = server.obtainAccess(Pesel(int(pesel)), ctx)
+                except Exception as error:
                     print(error)
                 else:
                     print(account_proxy)

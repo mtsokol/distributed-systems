@@ -1,4 +1,3 @@
-
 module BankSystem {
 
   enum Currency { PLN, GBP, USD, CHF, EUR };
@@ -12,11 +11,10 @@ module BankSystem {
   struct Period { string value; };
 
   struct AccountCreated { Password password; AccountType accountType; };
-  struct Credentials { Pesel pesel; Password password; };
   struct CreditEstimate { Balance originCurrency; Balance foreignCurrency; };
 
   exception InvalidCredentialsException {
-    string reason = "pesel of password invalid";
+    string reason = "pesel or password invalid";
   };
 
   exception InvalidAccountTypeException {
@@ -29,10 +27,13 @@ module BankSystem {
     CreditEstimate applyForCredit(Currency currency, Balance amount, Period period) throws InvalidAccountTypeException;
   };
 
+  interface AccountStandard extends Account {};
+
+  interface AccountPremium extends Account {};
+
   interface AccountFactory {
     AccountCreated createAccount(Name name, Surname surname, Pesel pesel, Balance income);
-    Account* obtainAccess(Credentials credentials) throws InvalidCredentialsException;
+    Account* obtainAccess(Pesel pesel) throws InvalidCredentialsException;
   };
   
 };
-
