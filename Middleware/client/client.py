@@ -6,23 +6,25 @@ sys.path.append(os.path.abspath("./utils/out/ice"))
 
 from BankSystem import *
 
-def get_currency_symbol(str):
+
+def get_currency_symbol(curr_str):
     switch = {
         'PLN': Currency.PLN,
-        'GBP': Currency.GBP ,
+        'GBP': Currency.GBP,
         'USD': Currency.USD,
         'CHF': Currency.CHF,
         'EUR': Currency.EUR
     }
-    return switch.get(str.upper(), 'invalid currency')
+    return switch.get(curr_str.upper(), 'invalid currency')
+
 
 def cli_wr_rd(msg):
     sys.stdout.write(msg)
     sys.stdout.flush()
     return sys.stdin.readline().strip()
 
-def run(communicator):
 
+def run(communicator):
     server = AccountFactoryPrx.checkedCast(
         communicator.propertyToProxy('AccountFactory.Proxy').ice_twoway().ice_secure(False))
     if not server:
@@ -60,6 +62,8 @@ def run(communicator):
                     print(error)
                 else:
                     print(account_proxy)
+            elif command == '':
+                continue
             else:
                 print('invalid command, use \'help\'')
         else:
@@ -80,12 +84,14 @@ def run(communicator):
                     credit_estimate = account_proxy.applyForCredit(get_currency_symbol(credit_currency),
                                                                    Balance(int(credit_amount)),
                                                                    Period(credit_period))
-                except InvalidAccountTypeException as error:
+                except Exception as error:
                     print(error)
                 else:
                     print(credit_estimate)
             elif command == 'accounttype':
                 print(f'your account type is: {account_proxy.getAccountType()}')
+            elif command == '':
+                continue
             else:
                 print('invalid command, use \'help\'')
 

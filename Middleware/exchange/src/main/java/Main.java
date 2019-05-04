@@ -12,8 +12,6 @@ public class Main {
 
     private Server server;
 
-    //synchronized
-
     private void start() throws IOException {
         int port = 50051;
         server = ServerBuilder.forPort(port)
@@ -29,7 +27,6 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-
         final Main main = new Main();
         main.start();
         main.blockUntilShutdown();

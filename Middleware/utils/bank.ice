@@ -21,6 +21,10 @@ module BankSystem {
     string reason = "credits are only for premium users";
   };
 
+  exception CurrencyNotSupportedException {
+    string reason = "this bank disallows this currency";
+  };
+
   interface Account {
     AccountType getAccountType();
     Balance getAccountBalance();

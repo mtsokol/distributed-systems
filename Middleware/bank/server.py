@@ -6,7 +6,6 @@ import grpc
 import random
 import string
 from threading import Thread
-from time import sleep
 
 sys.path.append(os.path.abspath("./utils/out/proto"))
 
@@ -38,6 +37,10 @@ class InvalidCredentialsExceptionI(InvalidCredentialsException):
     pass
 
 
+class CurrencyNotSupportedExceptionI(CurrencyNotSupportedException):
+    pass
+
+
 class AccountI(Account):
     def __init__(self, accountType, name, surname, pesel, password, income):
         self.accountType = accountType
@@ -49,21 +52,25 @@ class AccountI(Account):
         self.balance = Balance(income.value + 100)
 
     def getAccountType(self, current):
-        print('got account type')
+        print(f'*** Query for {self.pesel} account type ***')
         return self.accountType
 
     def getAccountBalance(self, current):
+        print(f'*** Query for {self.pesel} account balance ***')
         return self.balance
 
 
 class AccountStandardI(AccountI, AccountStandard):
     def applyForCredit(self, currency, amount, period, current):
-         raise InvalidAccountTypeExceptionI
+        raise InvalidAccountTypeExceptionI
 
 
 class AccountPremiumI(AccountI, AccountPremium):
     def applyForCredit(self, currency, amount, period, current):
+        if currency.value not in currencies:
+            raise CurrencyNotSupportedExceptionI
         credit_value = currency_rates[currency.value] * amount.value
+        print('*** Credit application has been accepted ***')
         return CreditEstimate(amount, Balance(credit_value))
 
 
@@ -84,6 +91,7 @@ class AccountFactoryI(AccountFactory):
         self.accountMap[str(pesel.value) + password.value] = asm_id
 
         current.adapter.add(account, Ice.stringToIdentity(asm_id))
+        print(f'*** The account {asm_id} has been created ***')
         return AccountCreated(password, account.accountType)
 
     def obtainAccess(self, pesel, current):
@@ -93,18 +101,19 @@ class AccountFactoryI(AccountFactory):
         except Exception:
             raise InvalidCredentialsExceptionI
         else:
+            print(f'*** Access to {asm_id} has been obtained ***')
             return acc_prx
 
 
 with Ice.initialize(sys.argv, "./bank/config.server") as communicator:
     if __name__ == "__main__":
         currencies = list(map(lambda e: int(e), sys.argv[1:]))
-
-        exchange_thread = Thread(target=run_exchange_conn, args=(currencies, ))
+        exchange_thread = Thread(target=run_exchange_conn, args=(currencies,))
         exchange_thread.start()
 
     signal.signal(signal.SIGINT, lambda signum, frame: communicator.shutdown())
     adapter = communicator.createObjectAdapter("AccountFactory")
     adapter.add(AccountFactoryI(), Ice.stringToIdentity("accountFactory"))
     adapter.activate()
+    print('*** The server is running ***')
     communicator.waitForShutdown()

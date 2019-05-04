@@ -1,8 +1,6 @@
 
 #
-# The server creates one single object adapter with the name
-# "Hello". The following line sets the endpoints for this
-# adapter.
+# The server sets the endpoints for this adapter.
 #
 AccountFactory.Endpoints=tcp -p 10000:udp -p 10001:ws -p 10003
 
@@ -12,15 +10,6 @@ AccountFactory.Endpoints=tcp -p 10000:udp -p 10001:ws -p 10003
 Ice.Default.Host=localhost
 
 #
-# For JavaScript browser clients using a secure WebSocket (WSS),
-# you should disable this property. Client-side authentication
-# is not supported with JavaScript browser clients.
-#
-#IceSSL.VerifyPeer=0
-
-#
 # Warn about connection exceptions
 #
 Ice.Warn.Connections=1
-
-

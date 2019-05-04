@@ -1,13 +1,8 @@
 #
 # The client reads this property to create the reference to the
-# "hello" object in the server.
+# "accountFactory" object in the server.
 #
 AccountFactory.Proxy=accountFactory:tcp -p 10000:udp -p 10001
-
-#
-# Uncomment to use the WebSocket transports instead.
-#
-#Hello.Proxy=hello:ws -p 10002:udp -p 10000:wss -p 10003
 
 #
 # Only connect to the localhost interface by default.
@@ -18,4 +13,3 @@ Ice.Default.Host=localhost
 # Warn about connection exceptions
 #
 Ice.Warn.Connections=1
-
