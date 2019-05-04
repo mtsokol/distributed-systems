@@ -3,7 +3,6 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import protos.ExchangeGrpc;
 import protos.ExchangeProto;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
@@ -60,8 +59,6 @@ public class Main {
                     responseObserver.onNext(rate);
                 }
             }
-
-            //responseObserver.onCompleted();
         }
     }
 }

@@ -11,16 +11,16 @@ Basic usage covers running bank app, exchange and client app.
 After installing `slice2py` and `grpc_tools.protoc` execute:
 
 ```sh
-$ make bank_ice
-$ make proto_exchange_java
-$ make proto_exchange_python
+$ make bank-ice
+$ make proto-exchange-java
+$ make proto-exchange-python
 ```
 
 ### Running project
 
-1. Run `Main.java` e.g. in IDE
-2. Run `make run_server`
-3. In separate shell run `make run_client`
+1. Run `make run-exchange`
+2. Run `make run-server`
+3. In separate shell run `make run-client`
 
 Example client cli interaction:
 
