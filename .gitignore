@@ -9,5 +9,6 @@ cmake-build-debug/
 .gradle
 out/
 gradle/
+!Middleware/exchange/gradle
 build/
 __pycache__/
