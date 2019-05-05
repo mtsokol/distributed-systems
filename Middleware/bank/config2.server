@@ -1,1 +1,1 @@
-AccountFactory.Endpoints=tcp -h localhost -p 10001
+BankObjectAdapter.Endpoints=tcp -h localhost -p 10001
