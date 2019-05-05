@@ -1,22 +1,28 @@
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import protos.ExchangeGrpc;
-import protos.ExchangeProto;
+import protos.ExchangeProto.*;
+import protos.ExchangeProto.Currency;
 import java.io.IOException;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Main {
 
     private Server server;
+    private static final int PORT = 50051;
 
     private void start() throws IOException {
-        int port = 50051;
-        server = ServerBuilder.forPort(port)
-                .addService(new Service())
+        Service service = new Service();
+        service.initializeExchange();
+
+        server = ServerBuilder.forPort(PORT)
+                .addService(service)
                 .build()
                 .start();
+
+        System.out.println("Server is running at: " + server.getListenSockets());
     }
 
     private void blockUntilShutdown() throws InterruptedException {
@@ -32,32 +38,68 @@ public class Main {
     }
 
     private static class Service extends ExchangeGrpc.ExchangeImplBase {
-        @Override
-        public void subscribeExchangeRate(ExchangeProto.ExchangeRequest request,
-                                          StreamObserver<ExchangeProto.ExchangeStream> responseObserver) {
 
-            Random generator = new Random();
-            ExchangeProto.Currency originCurrency = request.getOriginCurrency();
+        private static final Double CURRENCY_INIT_VALUE = 1.0;
+        private final Map<Currency, Double> exchange = new LinkedHashMap<>();
+        private final Map<Currency, List<StreamObserver<ExchangeStream>>> subscribers = new HashMap<>();
 
-            List<protos.ExchangeProto.Currency> ratesList = request.getCurrencyRatesList();
-            ratesList.remove(originCurrency);
+        private synchronized Map<Currency, List<StreamObserver<ExchangeStream>>> getSubscribersSync() {
+            return subscribers;
+        }
 
+        private void initializeExchange() {
+            for (Currency c : Currency.values()) {
+                exchange.put(c, CURRENCY_INIT_VALUE);
+                getSubscribersSync().computeIfAbsent(c, k -> new ArrayList<>());
+            }
+            new Thread(exchangeRunnable).start();
+        }
+
+        private final Runnable exchangeRunnable = () -> {
             while (true) {
-
+                Random generator = new Random();
                 try {
                     int sleepTime = generator.nextInt(500) + 500;
                     Thread.sleep(sleepTime);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                int randCurrencyIdx = generator.nextInt(Currency.values().length);
+                Currency currency = exchange.keySet().toArray(new Currency[0])[randCurrencyIdx];
+                Double currencyRate = generator.nextDouble() * 10;
+                exchange.put(currency, currencyRate);
 
-                for (ExchangeProto.Currency currency : ratesList) {
-                    int value = generator.nextInt(20) + 1;
-                    ExchangeProto.ExchangeStream rate = ExchangeProto.ExchangeStream.newBuilder()
-                            .setCurrency(currency).setExchangeRate(value).build();
+                List<StreamObserver<ExchangeStream>> currencySubscribers = getSubscribersSync().get(currency);
+                List<StreamObserver<ExchangeStream>> expiredSubscribers = new ArrayList<>();
 
-                    responseObserver.onNext(rate);
+                for (StreamObserver<ExchangeStream> observer : currencySubscribers) {
+                    ExchangeStream rate = ExchangeStream.newBuilder()
+                            .setCurrency(currency).setExchangeRate(currencyRate).build();
+                    try {
+                        observer.onNext(rate);
+                    } catch (StatusRuntimeException e) {
+                        System.out.println("*** " + observer.toString()
+                                + " not responding, removing from subscribers of " + currency.name() + " ***");
+                        expiredSubscribers.add(observer);
+                    }
+
                 }
+
+                currencySubscribers.removeAll(expiredSubscribers);
+            }
+        };
+
+        @Override
+        public void subscribeExchangeRate(ExchangeRequest request,
+                                          StreamObserver<ExchangeStream> responseObserver) {
+            Currency originCurrency = request.getOriginCurrency();
+            List<Currency> ratesList = request.getCurrencyRatesList();
+            ratesList.remove(originCurrency);
+
+            System.out.println("*** " + responseObserver + " as new subscriber requested: " + ratesList + " ***");
+
+            for (Currency c : ratesList) {
+                getSubscribersSync().get(c).add(responseObserver);
             }
         }
     }
