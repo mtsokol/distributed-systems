@@ -92,14 +92,10 @@ public class Main {
         @Override
         public void subscribeExchangeRate(ExchangeRequest request,
                                           StreamObserver<ExchangeStream> responseObserver) {
-            Currency originCurrency = request.getOriginCurrency();
             List<Currency> ratesList = request.getCurrencyRatesList();
-            ratesList.remove(originCurrency);
-
             System.out.println("*** " + responseObserver + " as new subscriber requested: " + ratesList + " ***");
-
-            for (Currency c : ratesList) {
-                getSubscribersSync().get(c).add(responseObserver);
+            for (Currency currency : ratesList) {
+                getSubscribersSync().get(currency).add(responseObserver);
             }
         }
     }

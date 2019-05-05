@@ -1,4 +1,4 @@
-.PHONY: run-server run-client run-exchange
+.PHONY: run-server run-server-2 run-client run-exchange
 
 bank-ice:
 	mkdir -p ./utils/out/ice; \
@@ -16,7 +16,7 @@ run-server:
 	python3 ./bank/server.py ./bank/config.server 1 2 3
 
 run-server-2:
-	python3 ./bank/server.py ./bank/config2.server 1 2 3
+	python3 ./bank/server.py ./bank/config2.server 0 2 4
 
 run-client:
 	python3 ./client/client.py
@@ -24,4 +24,3 @@ run-client:
 run-exchange:
 	cd exchange; \
 	./gradlew run
-

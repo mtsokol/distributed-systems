@@ -16,8 +16,7 @@ enum Currency {
 }
 
 message ExchangeRequest {
-  Currency origin_currency = 1;
-  repeated Currency currency_rates = 2 [packed=true];
+  repeated Currency currency_rates = 1 [packed=true];
 }
 
 message ExchangeStream {

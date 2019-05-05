@@ -37,7 +37,7 @@ def run(communicator):
         if account_proxy is None:
             command = cli_wr_rd('bank-welcome$ ')
             if command == 'help':
-                print('there is no help')
+                print('Available actions: signup, signin, exit')
             elif command == 'signup':
                 name = cli_wr_rd('your-name$ ')
                 surname = cli_wr_rd('your-surname$ ')
@@ -62,6 +62,8 @@ def run(communicator):
                     print(error)
                 else:
                     print(account_proxy)
+            elif command == 'exit':
+                sys.exit(0)
             elif command == '':
                 continue
             else:
@@ -71,7 +73,7 @@ def run(communicator):
             sys.stdout.flush()
             command = sys.stdin.readline().strip()
             if command == 'help':
-                print('there is no help')
+                print('Available actions: accounttype, balance, signout, credit (only for PREMIUM users)')
             elif command == 'signout':
                 account_proxy = None
             elif command == 'balance':

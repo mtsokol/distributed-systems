@@ -16,16 +16,16 @@ import exchange_pb2_grpc
 sys.path.append(os.path.abspath("./utils/out/ice"))
 
 from BankSystem import *
-from currency_rates import currency_rates
+from currency_rates import *
 
 
 def run_exchange_conn(arg):
     channel = grpc.insecure_channel('localhost:50051')
     stub = exchange_pb2_grpc.ExchangeStub(channel)
-    request = exchange_pb2.ExchangeRequest(origin_currency=exchange_pb2.PLN, currency_rates=arg)
+    request = exchange_pb2.ExchangeRequest(currency_rates=arg)
     try:
         for response in stub.subscribeExchangeRate(request):
-            print(currency_rates)
+            currency_rates_print()
             currency_rates[response.currency] = response.ExchangeRate
     except Exception as e:
         print(e)
