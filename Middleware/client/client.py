@@ -25,10 +25,9 @@ def cli_wr_rd(msg):
 
 
 def run(communicator):
-    server = AccountFactoryPrx.checkedCast(
-        communicator.propertyToProxy('AccountFactory.Proxy').ice_twoway().ice_secure(False))
-    if not server:
-        print('invalid server proxy')
+    account_factory_proxy = AccountFactoryPrx.checkedCast(communicator.propertyToProxy('AccountFactory.Proxy'))
+    if not account_factory_proxy:
+        print('invalid account factory proxy')
         sys.exit(1)
 
     account_proxy = None
@@ -44,10 +43,10 @@ def run(communicator):
                 pesel = cli_wr_rd('your-pesel$ ')
                 balance = cli_wr_rd('your-balance$ ')
                 try:
-                    acc_create_resp = server.createAccount(Name(name),
-                                                           Surname(surname),
-                                                           Pesel(int(pesel)),
-                                                           Balance(int(balance)))
+                    acc_create_resp = account_factory_proxy.createAccount(Name(name),
+                                                                          Surname(surname),
+                                                                          Pesel(int(pesel)),
+                                                                          Balance(int(balance)))
                 except Exception as error:
                     print(error)
                 else:
@@ -57,7 +56,7 @@ def run(communicator):
                 password = cli_wr_rd('your-password$ ')
                 ctx = {'password': password}
                 try:
-                    account_proxy = server.obtainAccess(Pesel(int(pesel)), ctx)
+                    account_proxy = account_factory_proxy.obtainAccess(Pesel(int(pesel)), ctx)
                 except Exception as error:
                     print(error)
                 else:

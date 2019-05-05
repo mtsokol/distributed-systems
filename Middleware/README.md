@@ -43,7 +43,7 @@ bank-welcome$ signin
 your-pesel$ 1243534
 your-password$ wed-X
 
-1243534_PREMIUM -t -e 1.1:tcp -h localhost -p 10000 -t 60000:udp -h localhost -p 10001:ws -h localhost -p 10003 -t 60000 -r /
+1243534_PREMIUM -t -e 1.1:tcp -h localhost -p 10000 -t 60000
 
 bank-PREMIUM$ balance
 

@@ -121,7 +121,7 @@ with Ice.initialize(sys.argv, sys.argv[1]) as communicator:
         exchange_thread.start()
 
     signal.signal(signal.SIGINT, exit_bank)
-    adapter = communicator.createObjectAdapter("AccountFactory")
+    adapter = communicator.createObjectAdapter("BankObjectAdapter")
     adapter.add(AccountFactoryI(), Ice.stringToIdentity("accountFactory"))
     adapter.activate()
     print('*** The server is running ***')
