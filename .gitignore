@@ -12,3 +12,5 @@ gradle/
 !Middleware/exchange/gradle
 build/
 __pycache__/
+target/
+

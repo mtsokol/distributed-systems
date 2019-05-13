@@ -6,4 +6,7 @@
  - JGroups - Distributed hash table
  - RabbitMQ - Message system for clinic
  - Middleware - Banking system
+ - Akka - Distributed system for library
+ - Zookeeper - ...
+
 
