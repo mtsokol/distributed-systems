@@ -14,3 +14,4 @@ build/
 __pycache__/
 target/
 
+!Akka/src/main/resources/db/*
