@@ -2,26 +2,42 @@ package actors
 
 import akka.actor.typed.{ActorRefResolver, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import domain.{Act, Book, BookTitle, Order, Result, Search, ServerMsg}
-import scala.util.Success
+import domain.{Book, BookResult, LibraryAction, Order, OrderCompleted, Search, ServerMsg}
+
+import scala.util.{Failure, Success}
+
 
 object ClientActor {
 
-  val actAsBook: Behavior[Act] =
-    Behaviors.receive {
-      (_, message) =>
-      message match {
-        case Result(Success(Book(bookTitle, price))) =>
+  def actAsSearch: Behavior[LibraryAction] =
+    Behaviors.receiveMessage {
+      case BookResult(Success(Book(bookTitle, price))) =>
+        println(bookTitle, price)
+        act
 
-          println(bookTitle, price)
-
-          act
-      }
-
-
+      case BookResult(Failure(exception)) =>
+        println(exception)
+        act
+      case _ =>
+        Behaviors.unhandled
     }
 
-  val act: Behavior[Act] = Behaviors.receive {
+  def actAsOrder: Behavior[LibraryAction] = Behaviors.receiveMessage {
+    case OrderCompleted =>
+      println("Order completed")
+      act
+
+    case _ =>
+      Behaviors.unhandled
+  }
+
+  def actAsStream: Behavior[LibraryAction] =
+    Behaviors.receiveMessage {
+      case _ =>
+        act
+    }
+
+  def act: Behavior[LibraryAction] = Behaviors.receive {
     (ctx, message) =>
       message match {
         case Search(book) =>
@@ -33,7 +49,7 @@ object ClientActor {
 
           y ! ServerMsg(ctx.self, Search(book))
 
-          actAsBook
+          actAsSearch
 
         case Order(xd) =>
 
@@ -43,8 +59,11 @@ object ClientActor {
 
           println(b)
 
-          actAsBook
+          actAsOrder
 
+        case _ =>
+
+          Behaviors.same
       }
   }
 

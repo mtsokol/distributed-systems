@@ -1,14 +1,14 @@
 import actors.ClientActor
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.ConfigFactory
-import domain.{Act, BookTitle, Order, Search, StreamContent}
+import domain.{LibraryAction, BookTitle, Order, Search, StreamContent}
 import scala.io.StdIn.readLine
 
 object Client extends App {
 
   val config = ConfigFactory.load()
 
-  val system: ActorSystem[Act] = ActorSystem(ClientActor.act, "client", config.getConfig("ClientApp"))
+  val system: ActorSystem[LibraryAction] = ActorSystem(ClientActor.act, "client", config.getConfig("ClientApp"))
 
   while (true) {
 

@@ -2,18 +2,18 @@ package actors
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
-import domain.{Act, Book, Price, Result, Search}
+import domain.{LibraryAction, Book, Price, BookResult, Search}
 
 import scala.util.Success
 
 object SearchActor {
 
-  def act(replyTo: ActorRef[Act]): Behavior[Search] = Behaviors.receive {
+  def act(replyTo: ActorRef[LibraryAction]): Behavior[Search] = Behaviors.receive {
     (ctx, message) =>
 
       println("searching")
 
-      replyTo.tell(Result(Success(Book(message.book, Price(23.23)))))
+      replyTo.tell(BookResult(Success(Book(message.book, Price(23.23)))))
       Behaviors.same
   }
 

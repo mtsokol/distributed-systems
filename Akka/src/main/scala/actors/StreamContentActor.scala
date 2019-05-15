@@ -1,5 +1,5 @@
 package actors
 
-class StreamContentActor {
+object StreamContentActor {
 
 }

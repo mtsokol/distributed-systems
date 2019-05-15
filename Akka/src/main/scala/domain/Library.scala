@@ -7,33 +7,32 @@ case class BookTitle(title: String) extends AnyVal
 
 case class Price(value: Double) extends AnyVal
 
-
-sealed trait Act
-
-
-sealed trait LibraryAction extends Act
-
-case class Search(book: BookTitle) extends LibraryAction
-
-case class Order(book: BookTitle) extends LibraryAction
-
-case class StreamContent(book: BookTitle) extends LibraryAction
+case class Book(bookTitle: BookTitle, price: Price)
 
 
-case class Result(value: Response.LibraryResponse) extends Act
+sealed trait LibraryAction
 
 
-sealed trait Response
+sealed trait ActionRequest extends LibraryAction
 
-case class Book(bookTitle: BookTitle, price: Price) extends Response
+case class Search(book: BookTitle) extends ActionRequest
 
-case object OrderCompleted extends Response
+case class Order(book: BookTitle) extends ActionRequest
 
-case class StreamResult(content: String) extends Response
-
-object Response {
-  type LibraryResponse = Try[Response]
-}
+case class StreamContent(book: BookTitle) extends ActionRequest
 
 
-case class ServerMsg(replyTo: ActorRef[Act], action: LibraryAction)
+sealed trait ActionResponse extends LibraryAction
+
+case class BookResult(value: Try[Book]) extends ActionResponse
+
+case object OrderCompleted extends ActionResponse
+
+case class StreamResult(content: String) extends ActionResponse
+
+case object StreamCompleted extends ActionResponse
+
+case class StreamFailed(ex: Throwable) extends ActionResponse
+
+
+case class ServerMsg(replyTo: ActorRef[LibraryAction], action: ActionRequest)
