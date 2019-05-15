@@ -7,6 +7,6 @@ object Server extends App {
 
   val config = ConfigFactory.load()
 
-  val system: ActorSystem[ServerMsg] = ActorSystem(ServerActor.act, "server", config.getConfig("ServerApp"))
+  val system: ActorSystem[ServerMsg] = ActorSystem(ServerActor.main, "server", config.getConfig("ServerApp"))
 
 }

@@ -1,47 +1,44 @@
 package actors
 
-import akka.NotUsed
-import akka.actor.typed.Behavior
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import akka.stream.scaladsl.{Sink, Source}
-import akka.stream.typed.scaladsl.{ActorMaterializer, ActorSink}
-import domain.{LibraryAction, Order, OrderCompleted, Search, ServerMsg, StreamCompleted, StreamContent, StreamFailed, StreamResult}
+import domain._
+import scala.util.Random
 
 object ServerActor {
 
-  def act: Behavior[ServerMsg] = Behaviors.receive {
+  def act(orderActor: ActorRef[ServerMsg]): Behavior[ServerMsg] = Behaviors.receive {
 
-    (context, message) =>
+    (ctx, message) =>
       val replyTo = message.replyTo
       message.action match {
-        case Search(book) =>
+        case s@Search(_) =>
 
-          val a = context.spawn(SearchActor.act(replyTo), s"search")
-
-          a ! Search(book)
-
-          Behaviors.same
-
-        case Order(book) =>
-
-          replyTo.tell(OrderCompleted)
+          val searchActor = ctx.spawn(SearchActor.act(replyTo), s"search-actor-${Random.nextInt(100)}")
+          searchActor ! s
 
           Behaviors.same
-        case StreamContent(book) =>
 
-          val source: Source[String, NotUsed] = Source("a" :: "number" :: "of" :: "words" :: Nil)
+        case Order(_) =>
 
-          val sink: Sink[LibraryAction, NotUsed] =
-            ActorSink.actorRef[LibraryAction](replyTo, StreamCompleted, StreamFailed)
+          orderActor ! message
 
-          implicit val system = context.system
-          implicit val materializer = ActorMaterializer()
+          Behaviors.same
+        case s@StreamRequest(_) =>
 
-          Source(StreamResult("xd") :: Nil).runWith(sink)
+          val streamContentActor = ctx.spawn(StreamContentActor.act(replyTo), s"stream-content-${Random.nextInt(100)}")
+          streamContentActor ! s
 
           Behaviors.same
       }
 
   }
 
+  def main: Behavior[ServerMsg] = Behaviors.setup {
+    ctx => {
+      val orderActor = ctx.spawn(OrderActor.act, "order-actor")
+
+      act(orderActor)
+    }
+  }
 }

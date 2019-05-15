@@ -19,7 +19,7 @@ case class Search(book: BookTitle) extends ActionRequest
 
 case class Order(book: BookTitle) extends ActionRequest
 
-case class StreamContent(book: BookTitle) extends ActionRequest
+case class StreamRequest(book: BookTitle) extends ActionRequest
 
 
 sealed trait ActionResponse extends LibraryAction

@@ -1,14 +1,14 @@
 import actors.ClientActor
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.ConfigFactory
-import domain.{LibraryAction, BookTitle, Order, Search, StreamContent}
+import domain.{LibraryAction, BookTitle, Order, Search, StreamRequest}
 import scala.io.StdIn.readLine
 
 object Client extends App {
 
   val config = ConfigFactory.load()
 
-  val system: ActorSystem[LibraryAction] = ActorSystem(ClientActor.act, "client", config.getConfig("ClientApp"))
+  val system: ActorSystem[LibraryAction] = ActorSystem(ClientActor.main, "client", config.getConfig("ClientApp"))
 
   while (true) {
 
@@ -20,7 +20,7 @@ object Client extends App {
       case "o" :: title :: _ =>
         system ! Order(BookTitle(title))
       case "c" :: title :: _ =>
-        system ! StreamContent(BookTitle(title))
+        system ! StreamRequest(BookTitle(title))
       case _ =>
         println("Invalid command")
     }

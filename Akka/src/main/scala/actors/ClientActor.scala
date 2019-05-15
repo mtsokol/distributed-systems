@@ -1,70 +1,82 @@
 package actors
 
-import akka.actor.typed.{ActorRefResolver, Behavior}
+import akka.actor.typed.{ActorRef, ActorRefResolver, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import domain.{Book, BookResult, LibraryAction, Order, OrderCompleted, Search, ServerMsg}
-
+import domain._
 import scala.util.{Failure, Success}
-
 
 object ClientActor {
 
-  def actAsSearch: Behavior[LibraryAction] =
+  def actAsSearch(baseAct: Behavior[LibraryAction]): Behavior[LibraryAction] =
     Behaviors.receiveMessage {
-      case BookResult(Success(Book(bookTitle, price))) =>
-        println(bookTitle, price)
-        act
+      case BookResult(Success(book@Book(_, _))) =>
+        println(book)
+        baseAct
 
       case BookResult(Failure(exception)) =>
         println(exception)
-        act
+        baseAct
+
       case _ =>
         Behaviors.unhandled
     }
 
-  def actAsOrder: Behavior[LibraryAction] = Behaviors.receiveMessage {
-    case OrderCompleted =>
-      println("Order completed")
-      act
-
-    case _ =>
-      Behaviors.unhandled
-  }
-
-  def actAsStream: Behavior[LibraryAction] =
+  def actAsOrder(baseAct: Behavior[LibraryAction]): Behavior[LibraryAction] =
     Behaviors.receiveMessage {
+      case ord@OrderCompleted =>
+        println(ord)
+        baseAct
+
       case _ =>
-        act
+        Behaviors.unhandled
     }
 
-  def act: Behavior[LibraryAction] = Behaviors.receive {
+  def actAsStream(baseAct: Behavior[LibraryAction]): Behavior[LibraryAction] =
+    Behaviors.receiveMessage {
+      case StreamResult(content) =>
+        println(content)
+        Behaviors.same
+
+      case cmpl@StreamCompleted =>
+        println(cmpl)
+        baseAct
+
+      case StreamFailed(ex) =>
+        println(ex)
+        baseAct
+
+      case _ =>
+        Behaviors.unhandled
+    }
+
+  def act(server: ActorRef[ServerMsg]): Behavior[LibraryAction] = Behaviors.receive {
     (ctx, message) =>
       message match {
-        case Search(book) =>
+        case s@Search(_) =>
 
+          server ! ServerMsg(ctx.self, s)
+          actAsSearch(act(server))
 
-          val a = ActorRefResolver(ctx.system)
+        case o@Order(_) =>
 
-          val y = a.resolveActorRef[ServerMsg]("akka.tcp://server@127.0.0.1:2552/user")
+          server ! ServerMsg(ctx.self, o)
+          actAsOrder(act(server))
 
-          y ! ServerMsg(ctx.self, Search(book))
+        case s@StreamRequest(_) =>
 
-          actAsSearch
-
-        case Order(xd) =>
-
-          val a = ActorRefResolver(ctx.system)
-
-          val b = a.toSerializationFormat(ctx.self)
-
-          println(b)
-
-          actAsOrder
+          server ! ServerMsg(ctx.self, s)
+          actAsStream(act(server))
 
         case _ =>
-
-          Behaviors.same
+          Behaviors.unhandled
       }
+  }
+
+  def main: Behavior[LibraryAction] = Behaviors.setup {
+    ctx =>
+      val resolver = ActorRefResolver(ctx.system)
+      val server = resolver.resolveActorRef[ServerMsg]("akka.tcp://server@127.0.0.1:2552/user")
+      act(server)
   }
 
 }
