@@ -12,6 +12,7 @@ object OrderActor {
         case ServerMsg(replyTo, o@Order(_)) =>
 
           println(s"Ordering ${o.book}")
+          //TODO ordering
           replyTo ! OrderCompleted
 
           Behaviors.same

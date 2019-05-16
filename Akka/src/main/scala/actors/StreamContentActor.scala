@@ -18,6 +18,7 @@ object StreamContentActor {
       implicit val system = ctx.system
       implicit val materializer = ActorMaterializer()
 
+      //TODO streaming
       Source(StreamResult("number") :: StreamResult("five") :: Nil).runWith(sink)
 
       Behaviors.same

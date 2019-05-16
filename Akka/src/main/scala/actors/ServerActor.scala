@@ -24,6 +24,7 @@ object ServerActor {
           orderActor ! message
 
           Behaviors.same
+
         case s@StreamRequest(_) =>
 
           val streamContentActor = ctx.spawn(StreamContentActor.act(replyTo), s"stream-content-${Random.nextInt(100)}")
