@@ -5,7 +5,8 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.typed.scaladsl.{ActorMaterializer, ActorSink}
-import domain.{LibraryAction, StreamCompleted, StreamFailed, StreamRequest, StreamResult}
+import domain.{AckMessage, Init, LibraryAction, Message, StreamCompleted, StreamFailed, StreamRequest, StreamResult}
+
 
 object StreamContentActor {
 
@@ -13,13 +14,21 @@ object StreamContentActor {
     (ctx, streamRequest) =>
 
       val sink: Sink[LibraryAction, NotUsed] =
-        ActorSink.actorRef[LibraryAction](replyTo, StreamCompleted, StreamFailed)
+        ActorSink.actorRefWithAck[LibraryAction, LibraryAction, LibraryAction](
+          ref = replyTo,
+          messageAdapter = Message,
+          onInitMessage = Init,
+          ackMessage = AckMessage,
+          onCompleteMessage = StreamCompleted,
+          onFailureMessage = StreamFailed)
 
       implicit val system = ctx.system
       implicit val materializer = ActorMaterializer()
 
-      //TODO streaming
-      Source(StreamResult("number") :: StreamResult("five") :: Nil).runWith(sink)
+      val bufferedSource = scala.io.Source.fromFile(s"src/main/resources/db/books/${streamRequest.book.title}")
+      val stream = bufferedSource.getLines.map(StreamResult).toStream
+
+      Source(stream).runWith(sink)
 
       Behaviors.same
   }

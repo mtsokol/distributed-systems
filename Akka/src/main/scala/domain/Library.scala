@@ -36,3 +36,9 @@ case class StreamFailed(ex: Throwable) extends ActionResponse
 
 
 case class ServerMsg(replyTo: ActorRef[LibraryAction], action: ActionRequest)
+
+case class Message(ackTo: ActorRef[LibraryAction], msg: LibraryAction) extends LibraryAction
+
+case class Init(ackTo: ActorRef[LibraryAction]) extends LibraryAction
+
+case object AckMessage extends LibraryAction

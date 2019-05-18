@@ -15,3 +15,5 @@ __pycache__/
 target/
 
 !Akka/src/main/resources/db/*
+!Akka/src/main/resources/db/books/*
+

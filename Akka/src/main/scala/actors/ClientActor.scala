@@ -33,12 +33,18 @@ object ClientActor {
 
   def actAsStream(baseAct: Behavior[LibraryAction]): Behavior[LibraryAction] =
     Behaviors.receiveMessage {
-      case StreamResult(content) =>
-        println(content)
+      case Init(replyTo) =>
+        replyTo ! AckMessage
         Behaviors.same
 
-      case cmpl@StreamCompleted =>
-        println(cmpl)
+      case Message(replyTo, content) =>
+        println(content)
+        Thread.sleep(1000)
+        replyTo ! AckMessage
+        Behaviors.same
+
+      case completed@StreamCompleted =>
+        println(completed)
         baseAct
 
       case StreamFailed(ex) =>

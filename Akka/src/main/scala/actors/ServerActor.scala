@@ -1,6 +1,6 @@
 package actors
 
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.actor.typed.scaladsl.Behaviors
 import domain._
 import scala.util.Random
@@ -12,10 +12,10 @@ object ServerActor {
     (ctx, message) =>
       val replyTo = message.replyTo
       message.action match {
-        case s@Search(_) =>
+        case search@Search(_) =>
 
           val searchActor = ctx.spawn(SearchActor.act(replyTo), s"search-actor-${Random.nextInt(100)}")
-          searchActor ! s
+          searchActor ! search
 
           Behaviors.same
 
@@ -25,10 +25,12 @@ object ServerActor {
 
           Behaviors.same
 
-        case s@StreamRequest(_) =>
+        case streamRequest@StreamRequest(_) =>
 
-          val streamContentActor = ctx.spawn(StreamContentActor.act(replyTo), s"stream-content-${Random.nextInt(100)}")
-          streamContentActor ! s
+          val behav = Behaviors.supervise(StreamContentActor.act(replyTo)).onFailure(SupervisorStrategy.restart)
+
+          val streamContentActor = ctx.spawn(behav, s"stream-content-${Random.nextInt(100)}")
+          streamContentActor ! streamRequest
 
           Behaviors.same
       }
