@@ -12,12 +12,14 @@ Example usage within client:
 > o book1
 OrderCompleted
 
-> s pan_tadeusz
-Book(BookTitle(pan_tadeusz),Price(23.23)
+> s zbrodnia_i_kara
+Book(BookTitle(zbrodnia_i_kara),Price(26.59))
 
-> c book2
-number
-five
+> c baczynski.txt
+Noc zielona była, po dniu skwarnym
+głębokość jej szumiała jakby liście czarne,
+w których mleczny rdzeń wyrósł, i kroplami gwiazd
+[...]
 StreamCompleted
 
 ```

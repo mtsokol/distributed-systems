@@ -28,6 +28,8 @@ case class BookResult(value: Try[Book]) extends ActionResponse
 
 case object OrderCompleted extends ActionResponse
 
+case object OrderFailed extends ActionResponse
+
 case class StreamResult(content: String) extends ActionResponse
 
 case object StreamCompleted extends ActionResponse

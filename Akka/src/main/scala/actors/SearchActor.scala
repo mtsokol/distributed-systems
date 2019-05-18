@@ -1,7 +1,7 @@
 package actors
 
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import domain.{Book, BookResult, BookTitle, LibraryAction, Price, Search}
 import scala.io.Source
 import scala.util.{Failure, Success}
@@ -25,8 +25,10 @@ object SearchActor {
       action match {
         case search@Search(_) =>
 
-          val actorSearchDb1 = ctx.spawn(searchDb(ctx.self, DbOne), "db1")
-          val actorSearchDb2 = ctx.spawn(searchDb(ctx.self, DbTwo), "db2")
+          val searchDb1Behav = Behaviors.supervise(searchDb(ctx.self, DbOne)).onFailure(SupervisorStrategy.resume)
+          val searchDb2Behav = Behaviors.supervise(searchDb(ctx.self, DbTwo)).onFailure(SupervisorStrategy.resume)
+          val actorSearchDb1 = ctx.spawn(searchDb1Behav, "db1")
+          val actorSearchDb2 = ctx.spawn(searchDb2Behav, "db2")
 
           actorSearchDb1 ! search
           actorSearchDb2 ! search
@@ -71,7 +73,7 @@ object SearchActor {
           replyTo ! BookResult(Success(Book(BookTitle(title), Price(price.toDouble))))
 
         case None =>
-          replyTo ! BookResult(Failure(new Exception("xd")))
+          replyTo ! BookResult(Failure(new Exception(s"Book: '${search.book.title}' not found")))
       }
 
       Behaviors.stopped

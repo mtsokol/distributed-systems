@@ -3,7 +3,8 @@ package actors
 import java.io.{FileWriter, PrintWriter}
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import domain.{Order, OrderCompleted, ServerMsg}
+import domain.{Order, OrderCompleted, OrderFailed, ServerMsg}
+import scala.util.{Failure, Success, Try}
 
 object OrderActor {
 
@@ -12,11 +13,19 @@ object OrderActor {
 
       println(s"Ordering ${order.book}")
 
-      val pw = new PrintWriter(new FileWriter("src/main/resources/db/orders.txt", true))
-      pw.write(order.book.title + "\n")
-      pw.close()
+      Try {
+        val pw = new PrintWriter(new FileWriter("src/main/resources/db/orders.txt", true))
+        pw.write(order.book.title + "\n")
+        pw.close()
+      } match {
+        case Success(_) =>
+          println(s"Ordered ${order.book}")
+          replyTo ! OrderCompleted
+        case Failure(_) =>
+          println(s"Failed ordering ${order.book}")
 
-      replyTo ! OrderCompleted
+          replyTo ! OrderFailed
+      }
 
       Behaviors.same
 

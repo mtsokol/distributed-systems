@@ -14,7 +14,7 @@ object ClientActor {
         baseAct
 
       case BookResult(Failure(exception)) =>
-        println(exception)
+        println(exception.getMessage)
         baseAct
 
       case _ =>
@@ -24,6 +24,10 @@ object ClientActor {
   def actAsOrder(baseAct: Behavior[LibraryAction]): Behavior[LibraryAction] =
     Behaviors.receiveMessage {
       case ord@OrderCompleted =>
+        println(ord)
+        baseAct
+
+      case ord@OrderFailed =>
         println(ord)
         baseAct
 
@@ -37,18 +41,21 @@ object ClientActor {
         replyTo ! AckMessage
         Behaviors.same
 
-      case Message(replyTo, content) =>
-        println(content)
-        Thread.sleep(1000)
+      case Message(replyTo, action) =>
+        action match {
+          case StreamResult(content) =>
+            println(content)
+          case StreamFailed(exception) =>
+            println(exception.getMessage)
+          case _ =>
+            println("Unrecognized content")
+        }
+        Thread.sleep(1500)
         replyTo ! AckMessage
         Behaviors.same
 
       case completed@StreamCompleted =>
         println(completed)
-        baseAct
-
-      case StreamFailed(ex) =>
-        println(ex)
         baseAct
 
       case _ =>
@@ -58,19 +65,16 @@ object ClientActor {
   def act(server: ActorRef[ServerMsg]): Behavior[LibraryAction] = Behaviors.receive {
     (ctx, message) =>
       message match {
-        case s@Search(_) =>
-
-          server ! ServerMsg(ctx.self, s)
+        case search@Search(_) =>
+          server ! ServerMsg(ctx.self, search)
           actAsSearch(act(server))
 
-        case o@Order(_) =>
-
-          server ! ServerMsg(ctx.self, o)
+        case order@Order(_) =>
+          server ! ServerMsg(ctx.self, order)
           actAsOrder(act(server))
 
-        case s@StreamRequest(_) =>
-
-          server ! ServerMsg(ctx.self, s)
+        case request@StreamRequest(_) =>
+          server ! ServerMsg(ctx.self, request)
           actAsStream(act(server))
 
         case _ =>

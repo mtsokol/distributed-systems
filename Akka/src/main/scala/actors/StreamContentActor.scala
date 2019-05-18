@@ -7,6 +7,8 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.typed.scaladsl.{ActorMaterializer, ActorSink}
 import domain.{AckMessage, Init, LibraryAction, Message, StreamCompleted, StreamFailed, StreamRequest, StreamResult}
 
+import scala.util.{Failure, Success, Try}
+
 
 object StreamContentActor {
 
@@ -25,10 +27,15 @@ object StreamContentActor {
       implicit val system = ctx.system
       implicit val materializer = ActorMaterializer()
 
-      val bufferedSource = scala.io.Source.fromFile(s"src/main/resources/db/books/${streamRequest.book.title}")
-      val stream = bufferedSource.getLines.map(StreamResult).toStream
-
-      Source(stream).runWith(sink)
+      Try {
+        val bufferedSource = scala.io.Source.fromFile(s"src/main/resources/db/books/${streamRequest.book.title}")
+        bufferedSource.getLines.map(StreamResult).toStream
+      } match {
+        case Success(stream) =>
+          Source(stream).runWith(sink)
+        case Failure(exception) =>
+          Source(Stream(StreamFailed(exception))).runWith(sink)
+      }
 
       Behaviors.same
   }

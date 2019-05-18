@@ -27,9 +27,9 @@ object ServerActor {
 
         case streamRequest@StreamRequest(_) =>
 
-          val behav = Behaviors.supervise(StreamContentActor.act(replyTo)).onFailure(SupervisorStrategy.restart)
+          val streamActorBehav = Behaviors.supervise(StreamContentActor.act(replyTo)).onFailure(SupervisorStrategy.stop)
 
-          val streamContentActor = ctx.spawn(behav, s"stream-content-${Random.nextInt(100)}")
+          val streamContentActor = ctx.spawn(streamActorBehav, s"stream-content-${Random.nextInt(100)}")
           streamContentActor ! streamRequest
 
           Behaviors.same
