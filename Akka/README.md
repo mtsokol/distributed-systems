@@ -19,6 +19,7 @@ Book(BookTitle(zbrodnia_i_kara),Price(26.59))
 Noc zielona była, po dniu skwarnym
 głębokość jej szumiała jakby liście czarne,
 w których mleczny rdzeń wyrósł, i kroplami gwiazd
+odmierzał się powoli nieostrożny czas. 
 [...]
 StreamCompleted
 

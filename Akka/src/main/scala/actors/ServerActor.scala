@@ -1,8 +1,10 @@
 package actors
 
+import java.io.FileNotFoundException
 import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.actor.typed.scaladsl.Behaviors
 import domain._
+import scala.concurrent.duration._
 import scala.util.Random
 
 object ServerActor {
@@ -22,7 +24,6 @@ object ServerActor {
         case Order(_) =>
 
           orderActor ! message
-
           Behaviors.same
 
         case streamRequest@StreamRequest(_) =>
@@ -39,7 +40,9 @@ object ServerActor {
 
   def main: Behavior[ServerMsg] = Behaviors.setup {
     ctx => {
-      val orderActor = ctx.spawn(OrderActor.act, "order-actor")
+      val orderBehav = Behaviors.supervise(OrderActor.act)
+        .onFailure[FileNotFoundException](SupervisorStrategy.restart.withLimit(10, 10.seconds))
+      val orderActor = ctx.spawn(orderBehav, "order-actor")
 
       act(orderActor)
     }

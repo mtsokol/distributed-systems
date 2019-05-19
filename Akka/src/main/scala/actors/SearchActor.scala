@@ -1,10 +1,11 @@
 package actors
 
-import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer}
+import akka.actor.typed.{ActorRef, Behavior, PreRestart, Signal, SupervisorStrategy}
 import domain.{Book, BookResult, BookTitle, LibraryAction, Price, Search}
+import scala.concurrent.duration._
 import scala.io.Source
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 object SearchActor {
 
@@ -25,8 +26,11 @@ object SearchActor {
       action match {
         case search@Search(_) =>
 
-          val searchDb1Behav = Behaviors.supervise(searchDb(ctx.self, DbOne)).onFailure(SupervisorStrategy.resume)
-          val searchDb2Behav = Behaviors.supervise(searchDb(ctx.self, DbTwo)).onFailure(SupervisorStrategy.resume)
+          val searchDb1Behav = Behaviors.supervise(searchDb(ctx.self, DbOne))
+            .onFailure(SupervisorStrategy.restartWithBackoff(Duration(5, SECONDS), Duration(10, SECONDS), 0))
+          val searchDb2Behav = Behaviors.supervise(searchDb(ctx.self, DbTwo))
+            .onFailure(SupervisorStrategy.restartWithBackoff(Duration(5, SECONDS), Duration(10, SECONDS), 0))
+
           val actorSearchDb1 = ctx.spawn(searchDb1Behav, "db1")
           val actorSearchDb2 = ctx.spawn(searchDb2Behav, "db2")
 
@@ -60,23 +64,42 @@ object SearchActor {
       Behaviors.unhandled
   }
 
-  private def searchDb(replyTo: ActorRef[LibraryAction], db: Db): Behavior[Search] = Behaviors.receiveMessage {
-    search =>
-      val bufferedSource = Source.fromFile(db.filename)
-      val rawRecord = bufferedSource.getLines.find{s => s.split(" ").head == search.book.title}
-        .map(x => x.split(" "))
+  private def searchDb(replyTo: ActorRef[LibraryAction], db: Db): Behavior[Search] = Behaviors.setup {
+    ctx =>
+      val buffer = StashBuffer[Search](capacity = 10)
 
-      bufferedSource.close
+      Behaviors.receiveMessage[Search] {
+        search =>
 
-      rawRecord match {
-        case Some(Array(title, price)) =>
-          replyTo ! BookResult(Success(Book(BookTitle(title), Price(price.toDouble))))
+          Try {
+            Source.fromFile(db.filename)
+          } match {
+            case Success(bufferedSource) =>
 
-        case None =>
-          replyTo ! BookResult(Failure(new Exception(s"Book: '${search.book.title}' not found")))
+              val rawRecord = bufferedSource.getLines.find { s => s.split(" ").head == search.book.title }
+                .map(x => x.split(" "))
+
+              bufferedSource.close
+
+              rawRecord match {
+                case Some(Array(title, price)) =>
+                  replyTo ! BookResult(Success(Book(BookTitle(title), Price(price.toDouble))))
+
+                case None =>
+                  replyTo ! BookResult(Failure(new Exception(s"Book: '${search.book.title}' not found")))
+              }
+
+              Behaviors.stopped
+
+            case Failure(exception) =>
+              buffer.stash(search)
+              throw exception
+          }
+
+      }.receiveSignal {
+        case (_: ActorContext[Search], PreRestart) =>
+          ctx.self ! buffer.head
+          searchDb(replyTo, db)
       }
-
-      Behaviors.stopped
   }
-
 }
